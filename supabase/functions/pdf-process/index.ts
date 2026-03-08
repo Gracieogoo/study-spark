@@ -72,7 +72,9 @@ Make flashcards that test understanding — use clear, concise language on both 
                   text:
                     action === "summarize"
                       ? "Please summarize this PDF document."
-                      : "Please generate a quiz from this PDF document.",
+                      : action === "quiz"
+                      ? "Please generate a quiz from this PDF document."
+                      : "Please generate flashcards from this PDF document.",
                 },
               ],
             },
