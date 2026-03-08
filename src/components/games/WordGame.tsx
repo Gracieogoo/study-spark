@@ -112,6 +112,16 @@ export default function WordGame() {
 
   return (
     <div className="space-y-4">
+      <Card className="bg-muted/30 border-border/50">
+        <CardContent className="p-4 space-y-1.5 text-sm text-muted-foreground">
+          <p className="font-semibold text-foreground text-base">How to play</p>
+          <p>Guess the hidden 5-letter word in {MAX_GUESSES} tries. Type a word and press <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-xs font-mono">Enter</kbd>.</p>
+          <div className="flex items-center gap-2"><span className="w-7 h-7 rounded flex items-center justify-center text-xs font-bold bg-green-600 text-white">A</span> = correct letter, correct spot</div>
+          <div className="flex items-center gap-2"><span className="w-7 h-7 rounded flex items-center justify-center text-xs font-bold bg-yellow-500 text-white">A</span> = correct letter, wrong spot</div>
+          <div className="flex items-center gap-2"><span className="w-7 h-7 rounded flex items-center justify-center text-xs font-bold bg-muted text-muted-foreground border border-border">A</span> = letter not in word</div>
+        </CardContent>
+      </Card>
+
       <div className="flex items-center gap-4 flex-wrap">
         <div className="text-sm text-muted-foreground">
           Guesses: <span className="font-semibold text-foreground">{guesses.length}/{MAX_GUESSES}</span>
