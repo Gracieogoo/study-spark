@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubjects, useNotes } from "@/lib/study-store";
+import { useFlashcards } from "@/lib/flashcard-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -10,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileUp, Loader2, CheckCircle2, XCircle, BookOpen, BrainCircuit, Trash2, Save } from "lucide-react";
+import { FileUp, Loader2, CheckCircle2, XCircle, BookOpen, BrainCircuit, Trash2, Save, Layers } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
@@ -30,9 +31,49 @@ export default function PdfStudyPage() {
   const [showResults, setShowResults] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [loadingQuiz, setLoadingQuiz] = useState(false);
+  const [loadingFlashcards, setLoadingFlashcards] = useState(false);
+  const [generatedFlashcards, setGeneratedFlashcards] = useState<{ front: string; back: string }[]>([]);
+  const [flashcardSubjectId, setFlashcardSubjectId] = useState("");
   const [saveSubjectId, setSaveSubjectId] = useState("");
   const { subjects } = useSubjects();
   const { addNote } = useNotes();
+  const { addFlashcard } = useFlashcards();
+
+  const handleGenerateFlashcards = async () => {
+    if (!pdfBase64) return;
+    setLoadingFlashcards(true);
+    setGeneratedFlashcards([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("pdf-process", {
+        body: { pdfBase64, action: "flashcards" },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      if (data?.flashcards && Array.isArray(data.flashcards)) {
+        setGeneratedFlashcards(data.flashcards);
+        toast.success(`Generated ${data.flashcards.length} flashcards!`);
+      } else {
+        toast.error("Unexpected response format from AI.");
+      }
+    } catch {
+      toast.error("Failed to generate flashcards. Please try again.");
+    } finally {
+      setLoadingFlashcards(false);
+    }
+  };
+
+  const handleSaveFlashcards = async () => {
+    if (!flashcardSubjectId || generatedFlashcards.length === 0) return;
+    try {
+      for (const card of generatedFlashcards) {
+        await addFlashcard(flashcardSubjectId, card.front, card.back);
+      }
+      toast.success(`Saved ${generatedFlashcards.length} flashcards!`);
+      setGeneratedFlashcards([]);
+    } catch {
+      toast.error("Failed to save flashcards.");
+    }
+  };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -164,14 +205,18 @@ export default function PdfStudyPage() {
 
       {/* Action buttons */}
       {pdfBase64 && (
-        <div className="flex gap-3">
-          <Button onClick={handleSummarize} disabled={loadingSummary || loadingQuiz}>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={handleSummarize} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
             {loadingSummary ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BookOpen className="h-4 w-4 mr-1" />}
             Summarize
           </Button>
-          <Button variant="secondary" onClick={handleQuiz} disabled={loadingSummary || loadingQuiz}>
+          <Button variant="secondary" onClick={handleQuiz} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
             {loadingQuiz ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BrainCircuit className="h-4 w-4 mr-1" />}
             Generate Quiz
+          </Button>
+          <Button variant="secondary" onClick={handleGenerateFlashcards} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
+            {loadingFlashcards ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Layers className="h-4 w-4 mr-1" />}
+            Generate Flashcards
           </Button>
         </div>
       )}
@@ -280,6 +325,45 @@ export default function PdfStudyPage() {
             )}
           </div>
         </div>
+      )}
+      {/* Generated Flashcards */}
+      {generatedFlashcards.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-display flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-primary" /> Generated Flashcards ({generatedFlashcards.length})
+              </span>
+              <div className="flex items-center gap-2">
+                <Select value={flashcardSubjectId} onValueChange={setFlashcardSubjectId}>
+                  <SelectTrigger className="w-36 h-8 text-xs">
+                    <SelectValue placeholder="Subject..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  disabled={!flashcardSubjectId}
+                  onClick={handleSaveFlashcards}
+                >
+                  <Save className="h-3.5 w-3.5 mr-1" /> Save All
+                </Button>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {generatedFlashcards.map((card, i) => (
+              <div key={i} className="rounded-lg border border-border bg-muted/30 p-3">
+                <p className="text-sm font-medium text-foreground">{card.front}</p>
+                <p className="text-xs text-muted-foreground mt-1">{card.back}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

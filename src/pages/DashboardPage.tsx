@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useSubjects, useSessions, useNotes } from "@/lib/study-store";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Sparkles,
   ChevronRight,
+  Flame,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -45,6 +46,32 @@ export default function DashboardPage() {
   );
 
   const recentNotes = useMemo(() => notes.slice(0, 3), [notes]);
+
+  const studyStreak = useMemo(() => {
+    if (sessions.length === 0) return 0;
+    const uniqueDays = new Set(sessions.map((s) => s.date.slice(0, 10)));
+    const sortedDays = Array.from(uniqueDays).sort().reverse();
+    
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+    const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().slice(0, 10);
+    
+    // Streak must include today or yesterday
+    if (!uniqueDays.has(todayStr) && !uniqueDays.has(yesterdayStr)) return 0;
+    
+    let streak = 0;
+    const startDate = uniqueDays.has(todayStr) ? today : new Date(today.getTime() - 86400000);
+    
+    for (let i = 0; i < 365; i++) {
+      const checkDate = new Date(startDate.getTime() - i * 86400000).toISOString().slice(0, 10);
+      if (uniqueDays.has(checkDate)) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }, [sessions]);
 
   const greeting = useMemo(() => {
     const h = new Date().getHours();
@@ -112,7 +139,8 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <StatCard icon={Flame} label="Study streak" value={`${studyStreak} day${studyStreak !== 1 ? "s" : ""}`} highlight={studyStreak >= 3} />
         <StatCard icon={Clock} label="Study today" value={`${todayMinutes} min`} />
         <StatCard icon={Timer} label="Sessions today" value={String(todaySessions.length)} />
         <StatCard icon={BookOpen} label="Subjects" value={String(subjects.length)} />
@@ -208,17 +236,19 @@ function StatCard({
   icon: Icon,
   label,
   value,
+  highlight,
 }: {
   icon: typeof Clock;
   label: string;
   value: string;
+  highlight?: boolean;
 }) {
   return (
-    <Card className="relative overflow-hidden">
+    <Card className={`relative overflow-hidden ${highlight ? "border-primary/50 bg-primary/5" : ""}`}>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-primary/10 p-2">
-            <Icon className="h-5 w-5 text-primary" />
+          <div className={`rounded-lg p-2 ${highlight ? "bg-primary/20" : "bg-primary/10"}`}>
+            <Icon className={`h-5 w-5 ${highlight ? "text-primary" : "text-primary"}`} />
           </div>
           <div>
             <p className="text-2xl font-bold text-foreground leading-tight">{value}</p>
