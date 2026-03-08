@@ -53,11 +53,15 @@ export default function FlashcardsPage() {
     [filteredCards]
   );
 
-  // Review history stats
-  const reviewedCards = useMemo(
-    () => filteredCards.filter((c) => c.review_count > 0).sort((a, b) => {
-      // Sort by next_review descending to show recently reviewed first
-      return new Date(b.next_review).getTime() - new Date(a.next_review).getTime();
+  // All cards sorted: reviewed first (by next_review desc), then unreviewed (by created_at desc)
+  const allCardsSorted = useMemo(
+    () => [...filteredCards].sort((a, b) => {
+      if (a.review_count > 0 && b.review_count === 0) return -1;
+      if (a.review_count === 0 && b.review_count > 0) return 1;
+      if (a.review_count > 0 && b.review_count > 0) {
+        return new Date(b.next_review).getTime() - new Date(a.next_review).getTime();
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     }),
     [filteredCards]
   );
@@ -313,7 +317,7 @@ export default function FlashcardsPage() {
             </Card>
             <Card>
               <CardContent className="py-4 text-center">
-                <p className="text-2xl font-bold text-foreground">{reviewedCards.length}</p>
+                <p className="text-2xl font-bold text-foreground">{filteredCards.filter(c => c.review_count > 0).length}</p>
                 <p className="text-xs text-muted-foreground">Cards Reviewed</p>
               </CardContent>
             </Card>
@@ -330,12 +334,12 @@ export default function FlashcardsPage() {
             <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" /> Recently Reviewed
             </h2>
-            {reviewedCards.length === 0 ? (
+            {allCardsSorted.length === 0 ? (
               <p className="text-sm text-muted-foreground py-4 text-center">
-                No review history yet. Start reviewing cards!
+                No flashcards yet. Create some cards to get started!
               </p>
             ) : (
-              reviewedCards.map((card) => {
+              allCardsSorted.map((card) => {
                 const subj = subjects.find((s) => s.id === card.subject_id);
                 const isDue = new Date(card.next_review) <= new Date();
                 return (
@@ -354,21 +358,33 @@ export default function FlashcardsPage() {
                                 {subj.name}
                               </span>
                             )}
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <RotateCcw className="h-3 w-3" /> {card.review_count} reviews
-                            </span>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Calendar className="h-3 w-3" /> Next: {new Date(card.next_review).toLocaleDateString()}
-                            </span>
+                            {card.review_count > 0 ? (
+                              <>
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <RotateCcw className="h-3 w-3" /> {card.review_count} reviews
+                                </span>
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" /> Next: {new Date(card.next_review).toLocaleDateString()}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                Added {new Date(card.created_at).toLocaleDateString()}
+                              </span>
+                            )}
                             {isDue && (
                               <span className="text-xs font-medium text-primary">Due now</span>
                             )}
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-xs text-muted-foreground">Ease</p>
-                          <p className="text-sm font-semibold text-foreground">{Number(card.ease_factor).toFixed(1)}</p>
-                        </div>
+                        {card.review_count > 0 ? (
+                          <div className="text-right shrink-0">
+                            <p className="text-xs text-muted-foreground">Ease</p>
+                            <p className="text-sm font-semibold text-foreground">{Number(card.ease_factor).toFixed(1)}</p>
+                          </div>
+                        ) : (
+                          <span className="text-xs font-medium text-accent-foreground bg-accent px-2 py-0.5 rounded shrink-0">New</span>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
