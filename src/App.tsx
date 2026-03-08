@@ -11,6 +11,7 @@ import NotesPage from "@/pages/NotesPage";
 import PomodoroPage from "@/pages/PomodoroPage";
 import ProgressPage from "@/pages/ProgressPage";
 import QuizPage from "@/pages/QuizPage";
+import PdfStudyPage from "@/pages/PdfStudyPage";
 import AuthPage from "@/pages/AuthPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
@@ -39,6 +40,7 @@ function ProtectedRoutes() {
         <Route path="/pomodoro" element={<PomodoroPage />} />
         <Route path="/progress" element={<ProgressPage />} />
         <Route path="/quiz" element={<QuizPage />} />
+        <Route path="/pdf-study" element={<PdfStudyPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
