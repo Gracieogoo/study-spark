@@ -13,6 +13,7 @@ import ProgressPage from "@/pages/ProgressPage";
 import QuizPage from "@/pages/QuizPage";
 import PdfStudyPage from "@/pages/PdfStudyPage";
 import FlashcardsPage from "@/pages/FlashcardsPage";
+import BreakGamePage from "@/pages/BreakGamePage";
 import AuthPage from "@/pages/AuthPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
