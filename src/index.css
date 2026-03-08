@@ -59,6 +59,51 @@
 
     font-family: 'Inter', sans-serif;
   }
+
+  .dark {
+    --background: 225 25% 8%;
+    --foreground: 220 15% 90%;
+
+    --card: 225 25% 11%;
+    --card-foreground: 220 15% 90%;
+
+    --popover: 225 25% 11%;
+    --popover-foreground: 220 15% 90%;
+
+    --primary: 172 60% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 225 20% 16%;
+    --secondary-foreground: 220 15% 85%;
+
+    --muted: 225 15% 15%;
+    --muted-foreground: 220 10% 55%;
+
+    --accent: 260 45% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 225 15% 18%;
+    --input: 225 15% 18%;
+    --ring: 172 60% 45%;
+
+    --sidebar-background: 225 30% 5%;
+    --sidebar-foreground: 220 10% 70%;
+    --sidebar-primary: 172 60% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 225 25% 12%;
+    --sidebar-accent-foreground: 220 10% 85%;
+    --sidebar-border: 225 20% 12%;
+    --sidebar-ring: 172 60% 50%;
+
+    --success: 145 55% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 35 80% 50%;
+    --warning-foreground: 0 0% 100%;
+  }
 }
 
 @layer base {
@@ -76,5 +121,11 @@
 @layer utilities {
   .font-display {
     font-family: 'Space Grotesk', sans-serif;
+  }
+  .text-gradient-brand {
+    background: linear-gradient(135deg, hsl(200, 80%, 50%), hsl(172, 60%, 40%), hsl(260, 50%, 55%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }

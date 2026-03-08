@@ -21,6 +21,7 @@ export type Database = {
           id: string
           subject_id: string
           title: string
+          user_id: string | null
         }
         Insert: {
           content: string
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           subject_id: string
           title: string
+          user_id?: string | null
         }
         Update: {
           content?: string
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           subject_id?: string
           title?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -46,6 +49,27 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       study_sessions: {
         Row: {
           date: string
@@ -53,6 +77,7 @@ export type Database = {
           id: string
           subject_id: string
           subject_name: string
+          user_id: string | null
         }
         Insert: {
           date?: string
@@ -60,6 +85,7 @@ export type Database = {
           id?: string
           subject_id: string
           subject_name: string
+          user_id?: string | null
         }
         Update: {
           date?: string
@@ -67,6 +93,7 @@ export type Database = {
           id?: string
           subject_id?: string
           subject_name?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -84,18 +111,21 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          user_id: string | null
         }
         Insert: {
           color: string
           created_at?: string
           id?: string
           name: string
+          user_id?: string | null
         }
         Update: {
           color?: string
           created_at?: string
           id?: string
           name?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -106,6 +136,7 @@ export type Database = {
           id: string
           name: string
           subject_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -113,6 +144,7 @@ export type Database = {
           id?: string
           name: string
           subject_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -120,6 +152,7 @@ export type Database = {
           id?: string
           name?: string
           subject_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

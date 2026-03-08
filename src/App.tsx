@@ -2,34 +2,66 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/AppLayout";
 import SubjectsPage from "@/pages/SubjectsPage";
 import NotesPage from "@/pages/NotesPage";
 import PomodoroPage from "@/pages/PomodoroPage";
 import ProgressPage from "@/pages/ProgressPage";
 import QuizPage from "@/pages/QuizPage";
+import AuthPage from "@/pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+function ProtectedRoutes() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-muted-foreground font-display">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/auth" replace />;
+
+  return (
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<SubjectsPage />} />
+        <Route path="/notes" element={<NotesPage />} />
+        <Route path="/pomodoro" element={<PomodoroPage />} />
+        <Route path="/progress" element={<ProgressPage />} />
+        <Route path="/quiz" element={<QuizPage />} />
+      </Route>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
+function AuthRouteGuard() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user) return <Navigate to="/" replace />;
+  return <AuthPage />;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<SubjectsPage />} />
-            <Route path="/notes" element={<NotesPage />} />
-            <Route path="/pomodoro" element={<PomodoroPage />} />
-            <Route path="/progress" element={<ProgressPage />} />
-            <Route path="/quiz" element={<QuizPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<AuthRouteGuard />} />
+            <Route path="/*" element={<ProtectedRoutes />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -1,6 +1,9 @@
-import { BookOpen, Timer, BarChart3, BrainCircuit, FileText } from "lucide-react";
+import { BookOpen, Timer, BarChart3, BrainCircuit, FileText, Moon, Sun, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/lib/auth-context";
 import neuralLogo from "@/assets/neural-logo.png";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,19 +26,29 @@ const navItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { signOut, user } = useAuth();
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
+
+  useEffect(() => {
+    if (dark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [dark]);
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarContent>
+      <SidebarContent className="flex flex-col h-full">
         <div className="flex items-center gap-2.5 px-4 py-5">
-          <img src={neuralLogo} alt="Neural Guide" className="h-8 w-8 shrink-0" />
+          <img src={neuralLogo} alt="Neural Guide" className="h-10 w-10 shrink-0" />
           {!collapsed && (
-            <span className="font-display text-lg font-bold text-sidebar-accent-foreground">
+            <span className="font-display text-xl font-bold text-gradient-brand">
               Neural Guide
             </span>
           )}
         </div>
-        <SidebarGroup>
+        <SidebarGroup className="flex-1">
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
@@ -56,6 +69,30 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <div className="px-3 py-3 space-y-2 border-t border-sidebar-border">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/60"
+            onClick={() => setDark(!dark)}
+          >
+            {dark ? <Sun className="h-4 w-4 mr-2 shrink-0" /> : <Moon className="h-4 w-4 mr-2 shrink-0" />}
+            {!collapsed && (dark ? "Light Mode" : "Dark Mode")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-sidebar-foreground hover:text-destructive hover:bg-sidebar-accent/60"
+            onClick={signOut}
+          >
+            <LogOut className="h-4 w-4 mr-2 shrink-0" />
+            {!collapsed && "Sign Out"}
+          </Button>
+          {!collapsed && user && (
+            <p className="text-xs text-sidebar-foreground/60 truncate px-2">{user.email}</p>
+          )}
+        </div>
       </SidebarContent>
     </Sidebar>
   );
