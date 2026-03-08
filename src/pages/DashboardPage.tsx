@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Sparkles,
   ChevronRight,
+  Flame,
 } from "lucide-react";
 
 export default function DashboardPage() {
