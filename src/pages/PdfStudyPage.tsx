@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubjects, useNotes } from "@/lib/study-store";
 import { useFlashcards } from "@/lib/flashcard-store";
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileUp, Loader2, CheckCircle2, XCircle, BookOpen, BrainCircuit, Trash2, Save, Layers } from "lucide-react";
+import { FileUp, Loader2, CheckCircle2, XCircle, BookOpen, BrainCircuit, Trash2, Save, Layers, Clock, FileText } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
@@ -20,6 +20,13 @@ interface QuizQuestion {
   question: string;
   options: string[];
   correctIndex: number;
+}
+
+interface PdfHistoryItem {
+  id: string;
+  file_name: string;
+  storage_path: string;
+  created_at: string;
 }
 
 export default function PdfStudyPage() {
@@ -39,9 +46,24 @@ export default function PdfStudyPage() {
   const [generatedFlashcards, setGeneratedFlashcards] = useState<{ front: string; back: string }[]>([]);
   const [flashcardSubjectId, setFlashcardSubjectId] = useState("");
   const [saveSubjectId, setSaveSubjectId] = useState("");
+  const [history, setHistory] = useState<PdfHistoryItem[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const { subjects } = useSubjects();
   const { addNote } = useNotes();
   const { addFlashcard } = useFlashcards();
+
+  const fetchHistory = useCallback(async () => {
+    if (!user) return;
+    setLoadingHistory(true);
+    const { data } = await supabase
+      .from("pdf_history")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setHistory((data as PdfHistoryItem[]) || []);
+    setLoadingHistory(false);
+  }, [user]);
+
+  useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
   const handleGenerateFlashcards = async () => {
     if (!pdfBase64) return;
@@ -78,6 +100,7 @@ export default function PdfStudyPage() {
       toast.error("Failed to save flashcards.");
     }
   };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -100,7 +123,6 @@ export default function PdfStudyPage() {
     setUploading(true);
 
     try {
-      // Upload to storage
       const filePath = `${user.id}/${Date.now()}-${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from("pdfs")
@@ -109,7 +131,14 @@ export default function PdfStudyPage() {
       if (uploadError) throw uploadError;
       setStoragePath(filePath);
 
-      // Also read base64 for AI processing
+      // Save to history
+      await supabase.from("pdf_history").insert({
+        user_id: user.id,
+        file_name: file.name,
+        storage_path: filePath,
+      });
+      fetchHistory();
+
       const reader = new FileReader();
       reader.onload = () => {
         const base64 = (reader.result as string).split(",")[1];
@@ -117,12 +146,59 @@ export default function PdfStudyPage() {
         setUploading(false);
       };
       reader.readAsDataURL(file);
-      toast.success("PDF uploaded to storage!");
+      toast.success("PDF uploaded!");
     } catch (err: any) {
       console.error("Upload error:", err);
       toast.error("Failed to upload PDF. Please try again.");
       setUploading(false);
     }
+  };
+
+  const loadFromHistory = async (item: PdfHistoryItem) => {
+    setFileName(item.file_name);
+    setStoragePath(item.storage_path);
+    setSummary("");
+    setQuestions([]);
+    setAnswers({});
+    setShowResults(false);
+    setGeneratedFlashcards([]);
+    setUploading(true);
+
+    try {
+      const { data, error } = await supabase.storage
+        .from("pdfs")
+        .download(item.storage_path);
+      if (error) throw error;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(",")[1];
+        setPdfBase64(base64);
+        setUploading(false);
+      };
+      reader.readAsDataURL(data);
+      toast.success(`Loaded "${item.file_name}"`);
+    } catch {
+      toast.error("Failed to load PDF from history.");
+      setUploading(false);
+    }
+  };
+
+  const deleteFromHistory = async (item: PdfHistoryItem) => {
+    await supabase.storage.from("pdfs").remove([item.storage_path]);
+    await supabase.from("pdf_history").delete().eq("id", item.id);
+    if (storagePath === item.storage_path) {
+      setFileName("");
+      setPdfBase64("");
+      setStoragePath("");
+      setSummary("");
+      setQuestions([]);
+      setAnswers({});
+      setShowResults(false);
+      setGeneratedFlashcards([]);
+    }
+    fetchHistory();
+    toast.success("PDF removed.");
   };
 
   const handleSummarize = async () => {
@@ -175,11 +251,7 @@ export default function PdfStudyPage() {
     0
   );
 
-  const clearFile = async () => {
-    // Delete from storage if uploaded
-    if (storagePath) {
-      await supabase.storage.from("pdfs").remove([storagePath]);
-    }
+  const clearFile = () => {
     setFileName("");
     setPdfBase64("");
     setStoragePath("");
@@ -206,7 +278,7 @@ export default function PdfStudyPage() {
           {uploading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-6">
               <Loader2 className="h-10 w-10 text-primary animate-spin" />
-              <span className="text-sm text-muted-foreground">Uploading PDF to storage...</span>
+              <span className="text-sm text-muted-foreground">Loading PDF...</span>
             </div>
           ) : !pdfBase64 ? (
             <label className="flex flex-col items-center justify-center gap-3 cursor-pointer py-6">
@@ -361,6 +433,7 @@ export default function PdfStudyPage() {
           </div>
         </div>
       )}
+
       {/* Generated Flashcards */}
       {generatedFlashcards.length > 0 && (
         <Card>
@@ -400,6 +473,54 @@ export default function PdfStudyPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* PDF History */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Clock className="h-4 w-4 text-primary" /> PDF History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingHistory ? (
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          ) : history.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No PDFs uploaded yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {history.map((item) => (
+                <div
+                  key={item.id}
+                  className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors
+                    ${storagePath === item.storage_path ? "border-primary/40 bg-primary/5" : "border-border hover:bg-muted/50"}
+                  `}
+                >
+                  <button
+                    className="flex items-center gap-3 min-w-0 flex-1 text-left"
+                    onClick={() => loadFromHistory(item)}
+                  >
+                    <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{item.file_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(item.created_at).toLocaleDateString()} · {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-destructive shrink-0"
+                    onClick={() => deleteFromHistory(item)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
