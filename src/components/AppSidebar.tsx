@@ -24,6 +24,7 @@ const navItems = [
   { title: "AI Quiz", url: "/quiz", icon: BrainCircuit },
   { title: "PDF Study", url: "/pdf-study", icon: FileUp },
   { title: "Flashcards", url: "/flashcards", icon: Layers },
+  { title: "Break", url: "/break", icon: Gamepad2 },
 ];
 
 export function AppSidebar() {
