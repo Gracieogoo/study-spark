@@ -80,6 +80,10 @@ export default function PdfStudyPage() {
 
   const handleGenerateFlashcards = async () => {
     if (!pdfBase64 || !user) return;
+    if (!flashcardSubjectId) {
+      toast.error("Please select a subject first to save flashcards.");
+      return;
+    }
     setLoadingFlashcards(true);
     setGeneratedFlashcards([]);
     try {
@@ -90,7 +94,11 @@ export default function PdfStudyPage() {
       if (data?.error) { toast.error(data.error); return; }
       if (data?.flashcards && Array.isArray(data.flashcards)) {
         setGeneratedFlashcards(data.flashcards);
-        toast.success(`Generated ${data.flashcards.length} flashcards!`);
+        // Auto-save all flashcards to the database
+        for (const card of data.flashcards) {
+          await addFlashcard(flashcardSubjectId, card.front, card.back);
+        }
+        toast.success(`Generated and saved ${data.flashcards.length} flashcards!`);
       } else {
         toast.error("Unexpected response format from AI.");
       }
@@ -356,7 +364,7 @@ export default function PdfStudyPage() {
 
       {/* Action buttons */}
       {pdfBase64 && (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
           <Button onClick={handleSummarize} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading}>
             {loadingSummary ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BookOpen className="h-4 w-4 mr-1" />}
             Summarize
@@ -365,7 +373,17 @@ export default function PdfStudyPage() {
             {loadingQuiz ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BrainCircuit className="h-4 w-4 mr-1" />}
             Generate Quiz
           </Button>
-          <Button variant="secondary" onClick={handleGenerateFlashcards} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading}>
+          <Select value={flashcardSubjectId} onValueChange={setFlashcardSubjectId}>
+            <SelectTrigger className="w-40 h-9 text-xs">
+              <SelectValue placeholder="Subject for cards..." />
+            </SelectTrigger>
+            <SelectContent>
+              {subjects.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="secondary" onClick={handleGenerateFlashcards} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading || !flashcardSubjectId}>
             {loadingFlashcards ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Layers className="h-4 w-4 mr-1" />}
             Generate Flashcards
           </Button>
@@ -486,25 +504,9 @@ export default function PdfStudyPage() {
               <span className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-primary" /> Generated Flashcards ({generatedFlashcards.length})
               </span>
-              <div className="flex items-center gap-2">
-                <Select value={flashcardSubjectId} onValueChange={setFlashcardSubjectId}>
-                  <SelectTrigger className="w-36 h-8 text-xs">
-                    <SelectValue placeholder="Subject..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  size="sm"
-                  disabled={!flashcardSubjectId}
-                  onClick={handleSaveFlashcards}
-                >
-                  <Save className="h-3.5 w-3.5 mr-1" /> Save All
-                </Button>
-              </div>
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <CheckCircle2 className="h-3.5 w-3.5 text-success" /> Saved to Flashcards
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
