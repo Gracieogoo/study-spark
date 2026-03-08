@@ -1,37 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
-export interface Topic {
-  id: string;
-  name: string;
-  done: boolean;
-}
-
-export interface Subject {
-  id: string;
-  name: string;
-  color: string;
-  topics: Topic[];
-}
-
-export interface StudySession {
-  id: string;
-  subjectId: string;
-  subjectName: string;
-  duration: number; // minutes
-  date: string; // ISO
-}
-
-export interface Note {
-  id: string;
-  subjectId: string;
-  title: string;
-  content: string;
-  date: string; // ISO
-}
-
-const SUBJECTS_KEY = "studybuddy_subjects";
-const SESSIONS_KEY = "studybuddy_sessions";
-const NOTES_KEY = "studybuddy_notes";
+export type Subject = Tables<"subjects"> & { topics: Topic[] };
+export type Topic = Tables<"topics">;
+export type StudySession = Tables<"study_sessions">;
+export type Note = Tables<"notes">;
 
 const SUBJECT_COLORS = [
   "hsl(172, 60%, 38%)",
@@ -44,103 +18,114 @@ const SUBJECT_COLORS = [
   "hsl(280, 55%, 50%)",
 ];
 
-function load<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 export function useSubjects() {
-  const [subjects, setSubjects] = useState<Subject[]>(() => load(SUBJECTS_KEY, []));
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSubjects = useCallback(async () => {
+    const { data: subjectsData } = await supabase.from("subjects").select("*").order("created_at");
+    const { data: topicsData } = await supabase.from("topics").select("*").order("created_at");
+
+    const subs: Subject[] = (subjectsData || []).map((s) => ({
+      ...s,
+      topics: (topicsData || []).filter((t) => t.subject_id === s.id),
+    }));
+    setSubjects(subs);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem(SUBJECTS_KEY, JSON.stringify(subjects));
-  }, [subjects]);
+    fetchSubjects();
+  }, [fetchSubjects]);
 
-  const addSubject = useCallback((name: string) => {
-    setSubjects((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        name,
-        color: SUBJECT_COLORS[prev.length % SUBJECT_COLORS.length],
-        topics: [],
-      },
-    ]);
-  }, []);
+  const addSubject = useCallback(async (name: string) => {
+    const color = SUBJECT_COLORS[subjects.length % SUBJECT_COLORS.length];
+    const { error } = await supabase.from("subjects").insert({ name, color });
+    if (!error) fetchSubjects();
+  }, [subjects.length, fetchSubjects]);
 
-  const removeSubject = useCallback((id: string) => {
-    setSubjects((prev) => prev.filter((s) => s.id !== id));
-  }, []);
+  const removeSubject = useCallback(async (id: string) => {
+    await supabase.from("subjects").delete().eq("id", id);
+    fetchSubjects();
+  }, [fetchSubjects]);
 
-  const addTopic = useCallback((subjectId: string, topicName: string) => {
-    setSubjects((prev) =>
-      prev.map((s) =>
-        s.id === subjectId
-          ? { ...s, topics: [...s.topics, { id: crypto.randomUUID(), name: topicName, done: false }] }
-          : s
-      )
-    );
-  }, []);
+  const addTopic = useCallback(async (subjectId: string, topicName: string) => {
+    await supabase.from("topics").insert({ subject_id: subjectId, name: topicName });
+    fetchSubjects();
+  }, [fetchSubjects]);
 
-  const toggleTopic = useCallback((subjectId: string, topicId: string) => {
-    setSubjects((prev) =>
-      prev.map((s) =>
-        s.id === subjectId
-          ? { ...s, topics: s.topics.map((t) => (t.id === topicId ? { ...t, done: !t.done } : t)) }
-          : s
-      )
-    );
-  }, []);
+  const toggleTopic = useCallback(async (subjectId: string, topicId: string) => {
+    const subject = subjects.find((s) => s.id === subjectId);
+    const topic = subject?.topics.find((t) => t.id === topicId);
+    if (topic) {
+      await supabase.from("topics").update({ done: !topic.done }).eq("id", topicId);
+      fetchSubjects();
+    }
+  }, [subjects, fetchSubjects]);
 
-  const removeTopic = useCallback((subjectId: string, topicId: string) => {
-    setSubjects((prev) =>
-      prev.map((s) =>
-        s.id === subjectId
-          ? { ...s, topics: s.topics.filter((t) => t.id !== topicId) }
-          : s
-      )
-    );
-  }, []);
+  const removeTopic = useCallback(async (subjectId: string, topicId: string) => {
+    await supabase.from("topics").delete().eq("id", topicId);
+    fetchSubjects();
+  }, [fetchSubjects]);
 
-  return { subjects, addSubject, removeSubject, addTopic, toggleTopic, removeTopic };
+  return { subjects, loading, addSubject, removeSubject, addTopic, toggleTopic, removeTopic };
 }
 
 export function useSessions() {
-  const [sessions, setSessions] = useState<StudySession[]>(() => load(SESSIONS_KEY, []));
+  const [sessions, setSessions] = useState<StudySession[]>([]);
+
+  const fetchSessions = useCallback(async () => {
+    const { data } = await supabase.from("study_sessions").select("*").order("date", { ascending: false });
+    setSessions(data || []);
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
-  }, [sessions]);
+    fetchSessions();
+  }, [fetchSessions]);
 
-  const addSession = useCallback((session: Omit<StudySession, "id">) => {
-    setSessions((prev) => [...prev, { ...session, id: crypto.randomUUID() }]);
-  }, []);
+  const addSession = useCallback(async (session: { subjectId: string; subjectName: string; duration: number; date: string }) => {
+    await supabase.from("study_sessions").insert({
+      subject_id: session.subjectId,
+      subject_name: session.subjectName,
+      duration: session.duration,
+      date: session.date,
+    });
+    fetchSessions();
+  }, [fetchSessions]);
 
   return { sessions, addSession };
 }
 
 export function useNotes() {
-  const [notes, setNotes] = useState<Note[]>(() => load(NOTES_KEY, []));
+  const [notes, setNotes] = useState<Note[]>([]);
+
+  const fetchNotes = useCallback(async () => {
+    const { data } = await supabase.from("notes").select("*").order("created_at", { ascending: false });
+    setNotes(data || []);
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-  }, [notes]);
+    fetchNotes();
+  }, [fetchNotes]);
 
-  const addNote = useCallback((note: Omit<Note, "id">) => {
-    setNotes((prev) => [...prev, { ...note, id: crypto.randomUUID() }]);
-  }, []);
+  const addNote = useCallback(async (note: { subjectId: string; title: string; content: string }) => {
+    await supabase.from("notes").insert({
+      subject_id: note.subjectId,
+      title: note.title,
+      content: note.content,
+    });
+    fetchNotes();
+  }, [fetchNotes]);
 
-  const updateNote = useCallback((id: string, content: string) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, content } : n)));
-  }, []);
+  const updateNote = useCallback(async (id: string, content: string) => {
+    await supabase.from("notes").update({ content }).eq("id", id);
+    fetchNotes();
+  }, [fetchNotes]);
 
-  const removeNote = useCallback((id: string) => {
-    setNotes((prev) => prev.filter((n) => n.id !== id));
-  }, []);
+  const removeNote = useCallback(async (id: string) => {
+    await supabase.from("notes").delete().eq("id", id);
+    fetchNotes();
+  }, [fetchNotes]);
 
   return { notes, addNote, updateNote, removeNote };
 }
