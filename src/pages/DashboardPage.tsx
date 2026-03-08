@@ -236,17 +236,19 @@ function StatCard({
   icon: Icon,
   label,
   value,
+  highlight,
 }: {
   icon: typeof Clock;
   label: string;
   value: string;
+  highlight?: boolean;
 }) {
   return (
-    <Card className="relative overflow-hidden">
+    <Card className={`relative overflow-hidden ${highlight ? "border-primary/50 bg-primary/5" : ""}`}>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-primary/10 p-2">
-            <Icon className="h-5 w-5 text-primary" />
+          <div className={`rounded-lg p-2 ${highlight ? "bg-primary/20" : "bg-primary/10"}`}>
+            <Icon className={`h-5 w-5 ${highlight ? "text-primary" : "text-primary"}`} />
           </div>
           <div>
             <p className="text-2xl font-bold text-foreground leading-tight">{value}</p>

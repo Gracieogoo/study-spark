@@ -113,15 +113,21 @@ Make flashcards that test understanding — use clear, concise language on both 
       });
     }
 
-    // Parse quiz JSON
+    // Parse JSON (quiz or flashcards)
     let jsonStr = content;
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) {
       jsonStr = jsonMatch[1].trim();
     }
-    const questions = JSON.parse(jsonStr);
+    const parsed = JSON.parse(jsonStr);
 
-    return new Response(JSON.stringify({ questions }), {
+    if (action === "quiz") {
+      return new Response(JSON.stringify({ questions: parsed }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ flashcards: parsed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
