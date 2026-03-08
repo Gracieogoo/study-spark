@@ -80,6 +80,10 @@ export default function PdfStudyPage() {
 
   const handleGenerateFlashcards = async () => {
     if (!pdfBase64 || !user) return;
+    if (!flashcardSubjectId) {
+      toast.error("Please select a subject first to save flashcards.");
+      return;
+    }
     setLoadingFlashcards(true);
     setGeneratedFlashcards([]);
     try {
@@ -90,7 +94,11 @@ export default function PdfStudyPage() {
       if (data?.error) { toast.error(data.error); return; }
       if (data?.flashcards && Array.isArray(data.flashcards)) {
         setGeneratedFlashcards(data.flashcards);
-        toast.success(`Generated ${data.flashcards.length} flashcards!`);
+        // Auto-save all flashcards to the database
+        for (const card of data.flashcards) {
+          await addFlashcard(flashcardSubjectId, card.front, card.back);
+        }
+        toast.success(`Generated and saved ${data.flashcards.length} flashcards!`);
       } else {
         toast.error("Unexpected response format from AI.");
       }
