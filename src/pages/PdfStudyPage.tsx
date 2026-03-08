@@ -243,7 +243,7 @@ export default function PdfStudyPage() {
             {loadingQuiz ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BrainCircuit className="h-4 w-4 mr-1" />}
             Generate Quiz
           </Button>
-          <Button variant="secondary" onClick={handleGenerateFlashcards} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
+          <Button variant="secondary" onClick={handleGenerateFlashcards} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading}>
             {loadingFlashcards ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Layers className="h-4 w-4 mr-1" />}
             Generate Flashcards
           </Button>
