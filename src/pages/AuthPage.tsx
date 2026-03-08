@@ -4,29 +4,48 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import neuralLogo from "@/assets/neural-logo.png";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+type AuthView = "signin" | "signup" | "forgot";
 
 export default function AuthPage() {
   const { signIn, signUp } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [view, setView] = useState<AuthView>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email) return;
     setLoading(true);
 
-    const { error } = isSignUp
+    if (view === "forgot") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Password reset link sent! Check your email.");
+        setView("signin");
+      }
+      setLoading(false);
+      return;
+    }
+
+    if (!password) { setLoading(false); return; }
+
+    const { error } = view === "signup"
       ? await signUp(email, password)
       : await signIn(email, password);
 
     if (error) {
       toast.error(error.message);
-    } else if (isSignUp) {
-      toast.success("Account created! You're now signed in.");
+    } else if (view === "signup") {
+      toast.success("Account created! Check your email to verify.");
     }
     setLoading(false);
   };
@@ -40,7 +59,7 @@ export default function AuthPage() {
             Neural Guide
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            {isSignUp ? "Create your account" : "Sign in to your dashboard"}
+            {view === "signup" ? "Create your account" : view === "forgot" ? "Reset your password" : "Sign in to your dashboard"}
           </p>
         </CardHeader>
         <CardContent>
@@ -52,28 +71,49 @@ export default function AuthPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
+            {view !== "forgot" && (
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-              {isSignUp ? "Sign Up" : "Sign In"}
+              {view === "signup" ? "Sign Up" : view === "forgot" ? "Send Reset Link" : "Sign In"}
             </Button>
           </form>
-          <p className="text-center text-sm text-muted-foreground mt-4">
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+
+          {view === "signin" && (
             <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-primary hover:underline font-medium"
+              onClick={() => setView("forgot")}
+              className="block w-full text-center text-sm text-muted-foreground hover:text-primary mt-3"
             >
-              {isSignUp ? "Sign In" : "Sign Up"}
+              Forgot password?
             </button>
-          </p>
+          )}
+
+          {view === "forgot" ? (
+            <button
+              onClick={() => setView("signin")}
+              className="flex items-center justify-center gap-1 w-full text-sm text-muted-foreground hover:text-primary mt-4"
+            >
+              <ArrowLeft className="h-3 w-3" /> Back to sign in
+            </button>
+          ) : (
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              {view === "signup" ? "Already have an account?" : "Don't have an account?"}{" "}
+              <button
+                onClick={() => setView(view === "signup" ? "signin" : "signup")}
+                className="text-primary hover:underline font-medium"
+              >
+                {view === "signup" ? "Sign In" : "Sign Up"}
+              </button>
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

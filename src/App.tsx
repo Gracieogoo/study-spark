@@ -11,6 +11,7 @@ import PomodoroPage from "@/pages/PomodoroPage";
 import ProgressPage from "@/pages/ProgressPage";
 import QuizPage from "@/pages/QuizPage";
 import AuthPage from "@/pages/AuthPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<AuthRouteGuard />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/*" element={<ProtectedRoutes />} />
           </Routes>
         </BrowserRouter>
