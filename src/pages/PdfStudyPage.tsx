@@ -205,14 +205,18 @@ export default function PdfStudyPage() {
 
       {/* Action buttons */}
       {pdfBase64 && (
-        <div className="flex gap-3">
-          <Button onClick={handleSummarize} disabled={loadingSummary || loadingQuiz}>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={handleSummarize} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
             {loadingSummary ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BookOpen className="h-4 w-4 mr-1" />}
             Summarize
           </Button>
-          <Button variant="secondary" onClick={handleQuiz} disabled={loadingSummary || loadingQuiz}>
+          <Button variant="secondary" onClick={handleQuiz} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
             {loadingQuiz ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BrainCircuit className="h-4 w-4 mr-1" />}
             Generate Quiz
+          </Button>
+          <Button variant="secondary" onClick={handleGenerateFlashcards} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
+            {loadingFlashcards ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Layers className="h-4 w-4 mr-1" />}
+            Generate Flashcards
           </Button>
         </div>
       )}
