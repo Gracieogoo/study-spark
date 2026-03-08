@@ -15,7 +15,12 @@ import {
   Sparkles,
   ChevronRight,
   Flame,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -82,6 +87,8 @@ export default function DashboardPage() {
   }, []);
 
   const [displayName, setDisplayName] = useState<string>(user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Student");
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -89,6 +96,19 @@ export default function DashboardPage() {
       if (data?.display_name) setDisplayName(data.display_name);
     });
   }, [user]);
+
+  const handleSaveName = useCallback(async () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed || !user) return;
+    const { error } = await supabase.from("profiles").update({ display_name: trimmed }).eq("user_id", user.id);
+    if (error) {
+      toast.error("Failed to update name");
+    } else {
+      setDisplayName(trimmed);
+      toast.success("Name updated!");
+    }
+    setEditingName(false);
+  }, [nameInput, user]);
 
   const suggestions = useMemo(() => {
     const items: { label: string; description: string; icon: typeof BookOpen; path: string }[] = [];
@@ -140,7 +160,25 @@ export default function DashboardPage() {
       {/* Hero greeting */}
       <div className="space-y-1">
         <h1 className="text-3xl font-display font-bold text-foreground flex items-center gap-2">
-          {greeting}, <span className="text-gradient-brand">{displayName}</span>
+          {greeting},{" "}
+          {editingName ? (
+            <span className="inline-flex items-center gap-1">
+              <Input
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSaveName(); if (e.key === "Escape") setEditingName(false); }}
+                className="h-9 w-48 text-xl font-bold"
+                autoFocus
+              />
+              <button onClick={handleSaveName} className="text-primary hover:text-primary/80"><Check className="h-5 w-5" /></button>
+              <button onClick={() => setEditingName(false)} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
+            </span>
+          ) : (
+            <span className="text-gradient-brand inline-flex items-center gap-1 group cursor-pointer" onClick={() => { setNameInput(displayName); setEditingName(true); }}>
+              {displayName}
+              <Pencil className="h-4 w-4 opacity-0 group-hover:opacity-60 transition-opacity" />
+            </span>
+          )}
           <Sparkles className="h-6 w-6 text-primary/70" />
         </h1>
         <p className="text-muted-foreground">Here's your study overview for today.</p>
