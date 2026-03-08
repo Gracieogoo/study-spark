@@ -21,8 +21,17 @@ export interface StudySession {
   date: string; // ISO
 }
 
+export interface Note {
+  id: string;
+  subjectId: string;
+  title: string;
+  content: string;
+  date: string; // ISO
+}
+
 const SUBJECTS_KEY = "studybuddy_subjects";
 const SESSIONS_KEY = "studybuddy_sessions";
+const NOTES_KEY = "studybuddy_notes";
 
 const SUBJECT_COLORS = [
   "hsl(172, 60%, 38%)",
@@ -112,4 +121,26 @@ export function useSessions() {
   }, []);
 
   return { sessions, addSession };
+}
+
+export function useNotes() {
+  const [notes, setNotes] = useState<Note[]>(() => load(NOTES_KEY, []));
+
+  useEffect(() => {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+  }, [notes]);
+
+  const addNote = useCallback((note: Omit<Note, "id">) => {
+    setNotes((prev) => [...prev, { ...note, id: crypto.randomUUID() }]);
+  }, []);
+
+  const updateNote = useCallback((id: string, content: string) => {
+    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, content } : n)));
+  }, []);
+
+  const removeNote = useCallback((id: string) => {
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  return { notes, addNote, updateNote, removeNote };
 }

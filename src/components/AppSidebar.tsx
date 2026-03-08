@@ -1,4 +1,4 @@
-import { BookOpen, Timer, BarChart3, BrainCircuit, GraduationCap } from "lucide-react";
+import { BookOpen, Timer, BarChart3, BrainCircuit, GraduationCap, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -13,6 +13,7 @@ import {
 
 const navItems = [
   { title: "Subjects", url: "/", icon: BookOpen },
+  { title: "Notes", url: "/notes", icon: FileText },
   { title: "Pomodoro", url: "/pomodoro", icon: Timer },
   { title: "Progress", url: "/progress", icon: BarChart3 },
   { title: "AI Quiz", url: "/quiz", icon: BrainCircuit },
