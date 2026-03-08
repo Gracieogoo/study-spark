@@ -364,7 +364,7 @@ export default function PdfStudyPage() {
 
       {/* Action buttons */}
       {pdfBase64 && (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
           <Button onClick={handleSummarize} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading}>
             {loadingSummary ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BookOpen className="h-4 w-4 mr-1" />}
             Summarize
@@ -373,7 +373,17 @@ export default function PdfStudyPage() {
             {loadingQuiz ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BrainCircuit className="h-4 w-4 mr-1" />}
             Generate Quiz
           </Button>
-          <Button variant="secondary" onClick={handleGenerateFlashcards} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading}>
+          <Select value={flashcardSubjectId} onValueChange={setFlashcardSubjectId}>
+            <SelectTrigger className="w-40 h-9 text-xs">
+              <SelectValue placeholder="Subject for cards..." />
+            </SelectTrigger>
+            <SelectContent>
+              {subjects.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="secondary" onClick={handleGenerateFlashcards} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading || !flashcardSubjectId}>
             {loadingFlashcards ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Layers className="h-4 w-4 mr-1" />}
             Generate Flashcards
           </Button>
