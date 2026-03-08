@@ -235,7 +235,7 @@ export default function NotesPage() {
                   <CardContent>
                     <p className="text-xs text-muted-foreground line-clamp-3">{note.content}</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {new Date(note.date).toLocaleDateString("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      {new Date(note.created_at).toLocaleDateString("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </CardContent>
                 </Card>
