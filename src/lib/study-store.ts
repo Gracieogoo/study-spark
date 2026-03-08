@@ -122,3 +122,25 @@ export function useSessions() {
 
   return { sessions, addSession };
 }
+
+export function useNotes() {
+  const [notes, setNotes] = useState<Note[]>(() => load(NOTES_KEY, []));
+
+  useEffect(() => {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+  }, [notes]);
+
+  const addNote = useCallback((note: Omit<Note, "id">) => {
+    setNotes((prev) => [...prev, { ...note, id: crypto.randomUUID() }]);
+  }, []);
+
+  const updateNote = useCallback((id: string, content: string) => {
+    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, content } : n)));
+  }, []);
+
+  const removeNote = useCallback((id: string) => {
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  return { notes, addNote, updateNote, removeNote };
+}
