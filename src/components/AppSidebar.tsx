@@ -22,6 +22,7 @@ const navItems = [
   { title: "Pomodoro", url: "/pomodoro", icon: Timer },
   { title: "Progress", url: "/progress", icon: BarChart3 },
   { title: "AI Quiz", url: "/quiz", icon: BrainCircuit },
+  { title: "PDF Study", url: "/pdf-study", icon: FileUp },
 ];
 
 export function AppSidebar() {
