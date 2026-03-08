@@ -212,14 +212,14 @@ export default function NotesPage() {
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {filteredNotes
-              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
               .map((note) => (
                 <Card key={note.id} className="group cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleEdit(note)}>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getSubjectColor(note.subjectId) }} />
-                        <span className="text-xs text-muted-foreground">{getSubjectName(note.subjectId)}</span>
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getSubjectColor(note.subject_id) }} />
+                        <span className="text-xs text-muted-foreground">{getSubjectName(note.subject_id)}</span>
                       </div>
                       <Button
                         variant="ghost"
