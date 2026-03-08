@@ -15,6 +15,7 @@ export default function AuthPage() {
   const [view, setView] = useState<AuthView>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -40,7 +41,7 @@ export default function AuthPage() {
     if (!password) { setLoading(false); return; }
 
     const { error } = view === "signup"
-      ? await signUp(email, password)
+      ? await signUp(email, password, displayName.trim() || undefined)
       : await signIn(email, password);
 
     if (error) {
@@ -65,6 +66,15 @@ export default function AuthPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-3">
+            {view === "signup" && (
+              <Input
+                type="text"
+                placeholder="Display name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+              />
+            )}
             <Input
               type="email"
               placeholder="Email"

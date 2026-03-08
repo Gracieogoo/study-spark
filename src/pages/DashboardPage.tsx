@@ -1,6 +1,7 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState, useEffect } from "react";
 import { useSubjects, useSessions, useNotes } from "@/lib/study-store";
 import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -80,7 +81,14 @@ export default function DashboardPage() {
     return "Good evening";
   }, []);
 
-  const displayName = user?.email?.split("@")[0] ?? "Student";
+  const [displayName, setDisplayName] = useState<string>(user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Student");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("display_name").eq("user_id", user.id).single().then(({ data }) => {
+      if (data?.display_name) setDisplayName(data.display_name);
+    });
+  }, [user]);
 
   const suggestions = useMemo(() => {
     const items: { label: string; description: string; icon: typeof BookOpen; path: string }[] = [];
