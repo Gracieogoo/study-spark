@@ -135,6 +135,13 @@ export default function SudokuGame() {
 
   return (
     <div className="space-y-4">
+      <Card className="bg-muted/30 border-border/50">
+        <CardContent className="p-4 space-y-1 text-sm text-muted-foreground">
+          <p className="font-semibold text-foreground text-base">How to play</p>
+          <p>Fill every row, column, and 3×3 box with the numbers 1–9 (no repeats). Tap a cell, then tap a number below. Use hints if you're stuck!</p>
+        </CardContent>
+      </Card>
+
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           Errors: <span className="font-semibold text-destructive">{errors.size}</span>

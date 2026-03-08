@@ -70,6 +70,13 @@ export default function PuzzleGame() {
 
   return (
     <div className="space-y-4">
+      <Card className="bg-muted/30 border-border/50">
+        <CardContent className="p-4 space-y-1 text-sm text-muted-foreground">
+          <p className="font-semibold text-foreground text-base">How to play</p>
+          <p>Tap a tile next to the empty space to slide it. Arrange all numbers 1–15 in order from left to right, top to bottom.</p>
+        </CardContent>
+      </Card>
+
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Timer className="h-4 w-4" /> {elapsed}s
