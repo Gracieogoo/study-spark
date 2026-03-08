@@ -21,20 +21,29 @@ serve(async (req) => {
       throw new Error("Invalid action. Must be 'summarize', 'quiz', or 'flashcards'");
     }
 
-    const systemPrompt =
-      action === "summarize"
-        ? `You are a study assistant. Summarize the provided PDF document clearly and concisely. Structure your summary with:
+    let systemPrompt: string;
+    if (action === "summarize") {
+      systemPrompt = `You are a study assistant. Summarize the provided PDF document clearly and concisely. Structure your summary with:
 - A brief overview (2-3 sentences)
 - Key points as bullet points
 - Important terms or concepts highlighted
 
-Use markdown formatting for readability.`
-        : `You are a quiz generator for students. Based on the provided PDF document, create exactly 5 multiple-choice quiz questions that test understanding of the content. Each question should have 4 options with exactly one correct answer.
+Use markdown formatting for readability.`;
+    } else if (action === "quiz") {
+      systemPrompt = `You are a quiz generator for students. Based on the provided PDF document, create exactly 5 multiple-choice quiz questions that test understanding of the content. Each question should have 4 options with exactly one correct answer.
 
 Return ONLY valid JSON in this exact format, no other text:
 [{"question":"...","options":["A","B","C","D"],"correctIndex":0},...]
 
 The correctIndex is 0-based (0-3). Make questions that genuinely test comprehension, not just memorization.`;
+    } else {
+      systemPrompt = `You are a flashcard generator for students. Based on the provided PDF document, create 10-15 flashcards that cover the most important concepts, definitions, and facts.
+
+Return ONLY valid JSON in this exact format, no other text:
+[{"front":"Question or term","back":"Answer or definition"},...]
+
+Make flashcards that test understanding — use clear, concise language on both sides.`;
+    }
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
