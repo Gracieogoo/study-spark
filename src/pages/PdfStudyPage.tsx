@@ -235,7 +235,7 @@ export default function PdfStudyPage() {
       {/* Action buttons */}
       {pdfBase64 && (
         <div className="flex flex-wrap gap-3">
-          <Button onClick={handleSummarize} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
+          <Button onClick={handleSummarize} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading}>
             {loadingSummary ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BookOpen className="h-4 w-4 mr-1" />}
             Summarize
           </Button>
