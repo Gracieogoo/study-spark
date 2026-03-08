@@ -1,4 +1,4 @@
-import { BookOpen, Timer, BarChart3, BrainCircuit, FileText, Moon, Sun, LogOut } from "lucide-react";
+import { LayoutDashboard, BookOpen, Timer, BarChart3, BrainCircuit, FileText, Moon, Sun, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/lib/auth-context";
 import neuralLogo from "@/assets/neural-logo.png";
@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/sidebar";
 
 const navItems = [
-  { title: "Subjects", url: "/", icon: BookOpen },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Subjects", url: "/subjects", icon: BookOpen },
   { title: "Notes", url: "/notes", icon: FileText },
   { title: "Pomodoro", url: "/pomodoro", icon: Timer },
   { title: "Progress", url: "/progress", icon: BarChart3 },

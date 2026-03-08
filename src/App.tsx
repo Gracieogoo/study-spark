@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/AppLayout";
+import DashboardPage from "@/pages/DashboardPage";
 import SubjectsPage from "@/pages/SubjectsPage";
 import NotesPage from "@/pages/NotesPage";
 import PomodoroPage from "@/pages/PomodoroPage";
@@ -32,7 +33,8 @@ function ProtectedRoutes() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route path="/" element={<SubjectsPage />} />
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/subjects" element={<SubjectsPage />} />
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/pomodoro" element={<PomodoroPage />} />
         <Route path="/progress" element={<ProgressPage />} />
