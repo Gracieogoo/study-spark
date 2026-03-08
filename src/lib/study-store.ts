@@ -21,8 +21,17 @@ export interface StudySession {
   date: string; // ISO
 }
 
+export interface Note {
+  id: string;
+  subjectId: string;
+  title: string;
+  content: string;
+  date: string; // ISO
+}
+
 const SUBJECTS_KEY = "studybuddy_subjects";
 const SESSIONS_KEY = "studybuddy_sessions";
+const NOTES_KEY = "studybuddy_notes";
 
 const SUBJECT_COLORS = [
   "hsl(172, 60%, 38%)",
