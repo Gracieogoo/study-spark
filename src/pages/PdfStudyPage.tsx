@@ -239,7 +239,7 @@ export default function PdfStudyPage() {
             {loadingSummary ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BookOpen className="h-4 w-4 mr-1" />}
             Summarize
           </Button>
-          <Button variant="secondary" onClick={handleQuiz} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
+          <Button variant="secondary" onClick={handleQuiz} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading}>
             {loadingQuiz ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BrainCircuit className="h-4 w-4 mr-1" />}
             Generate Quiz
           </Button>
