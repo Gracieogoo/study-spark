@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback } from "react";
 import { useSubjects, useSessions, useNotes } from "@/lib/study-store";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
