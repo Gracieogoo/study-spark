@@ -334,12 +334,12 @@ export default function FlashcardsPage() {
             <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" /> Recently Reviewed
             </h2>
-            {reviewedCards.length === 0 ? (
+            {allCardsSorted.length === 0 ? (
               <p className="text-sm text-muted-foreground py-4 text-center">
-                No review history yet. Start reviewing cards!
+                No flashcards yet. Create some cards to get started!
               </p>
             ) : (
-              reviewedCards.map((card) => {
+              allCardsSorted.map((card) => {
                 const subj = subjects.find((s) => s.id === card.subject_id);
                 const isDue = new Date(card.next_review) <= new Date();
                 return (
