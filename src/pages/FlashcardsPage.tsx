@@ -317,7 +317,7 @@ export default function FlashcardsPage() {
             </Card>
             <Card>
               <CardContent className="py-4 text-center">
-                <p className="text-2xl font-bold text-foreground">{reviewedCards.length}</p>
+                <p className="text-2xl font-bold text-foreground">{filteredCards.filter(c => c.review_count > 0).length}</p>
                 <p className="text-xs text-muted-foreground">Cards Reviewed</p>
               </CardContent>
             </Card>
