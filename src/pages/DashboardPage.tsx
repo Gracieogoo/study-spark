@@ -81,7 +81,14 @@ export default function DashboardPage() {
     return "Good evening";
   }, []);
 
-  const displayName = user?.email?.split("@")[0] ?? "Student";
+  const [displayName, setDisplayName] = useState<string>(user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Student");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("display_name").eq("user_id", user.id).single().then(({ data }) => {
+      if (data?.display_name) setDisplayName(data.display_name);
+    });
+  }, [user]);
 
   const suggestions = useMemo(() => {
     const items: { label: string; description: string; icon: typeof BookOpen; path: string }[] = [];

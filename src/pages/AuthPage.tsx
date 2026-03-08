@@ -41,7 +41,7 @@ export default function AuthPage() {
     if (!password) { setLoading(false); return; }
 
     const { error } = view === "signup"
-      ? await signUp(email, password)
+      ? await signUp(email, password, displayName.trim() || undefined)
       : await signIn(email, password);
 
     if (error) {

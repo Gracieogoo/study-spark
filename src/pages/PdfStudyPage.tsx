@@ -203,7 +203,12 @@ export default function PdfStudyPage() {
       {/* Upload area */}
       <Card className={pdfBase64 ? "border-primary/40" : "border-dashed"}>
         <CardContent className="py-6">
-          {!pdfBase64 ? (
+          {uploading ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-6">
+              <Loader2 className="h-10 w-10 text-primary animate-spin" />
+              <span className="text-sm text-muted-foreground">Uploading PDF to storage...</span>
+            </div>
+          ) : !pdfBase64 ? (
             <label className="flex flex-col items-center justify-center gap-3 cursor-pointer py-6">
               <FileUp className="h-10 w-10 text-muted-foreground/50" />
               <span className="text-sm text-muted-foreground">
