@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubjects, useNotes } from "@/lib/study-store";
 import { useFlashcards } from "@/lib/flashcard-store";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -22,9 +23,12 @@ interface QuizQuestion {
 }
 
 export default function PdfStudyPage() {
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState("");
   const [pdfBase64, setPdfBase64] = useState("");
+  const [storagePath, setStoragePath] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [summary, setSummary] = useState("");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<number, number>>({});
@@ -74,9 +78,9 @@ export default function PdfStudyPage() {
       toast.error("Failed to save flashcards.");
     }
   };
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !user) return;
 
     if (file.type !== "application/pdf") {
       toast.error("Please upload a PDF file.");
@@ -92,13 +96,33 @@ export default function PdfStudyPage() {
     setQuestions([]);
     setAnswers({});
     setShowResults(false);
+    setGeneratedFlashcards([]);
+    setUploading(true);
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = (reader.result as string).split(",")[1];
-      setPdfBase64(base64);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Upload to storage
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("pdfs")
+        .upload(filePath, file, { contentType: "application/pdf" });
+
+      if (uploadError) throw uploadError;
+      setStoragePath(filePath);
+
+      // Also read base64 for AI processing
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(",")[1];
+        setPdfBase64(base64);
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+      toast.success("PDF uploaded to storage!");
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      toast.error("Failed to upload PDF. Please try again.");
+      setUploading(false);
+    }
   };
 
   const handleSummarize = async () => {
@@ -151,13 +175,19 @@ export default function PdfStudyPage() {
     0
   );
 
-  const clearFile = () => {
+  const clearFile = async () => {
+    // Delete from storage if uploaded
+    if (storagePath) {
+      await supabase.storage.from("pdfs").remove([storagePath]);
+    }
     setFileName("");
     setPdfBase64("");
+    setStoragePath("");
     setSummary("");
     setQuestions([]);
     setAnswers({});
     setShowResults(false);
+    setGeneratedFlashcards([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -206,15 +236,15 @@ export default function PdfStudyPage() {
       {/* Action buttons */}
       {pdfBase64 && (
         <div className="flex flex-wrap gap-3">
-          <Button onClick={handleSummarize} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
+          <Button onClick={handleSummarize} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading}>
             {loadingSummary ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BookOpen className="h-4 w-4 mr-1" />}
             Summarize
           </Button>
-          <Button variant="secondary" onClick={handleQuiz} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
+          <Button variant="secondary" onClick={handleQuiz} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading}>
             {loadingQuiz ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <BrainCircuit className="h-4 w-4 mr-1" />}
             Generate Quiz
           </Button>
-          <Button variant="secondary" onClick={handleGenerateFlashcards} disabled={loadingSummary || loadingQuiz || loadingFlashcards}>
+          <Button variant="secondary" onClick={handleGenerateFlashcards} disabled={loadingSummary || loadingQuiz || loadingFlashcards || uploading}>
             {loadingFlashcards ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Layers className="h-4 w-4 mr-1" />}
             Generate Flashcards
           </Button>
