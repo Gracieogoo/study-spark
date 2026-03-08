@@ -486,9 +486,25 @@ export default function PdfStudyPage() {
               <span className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-primary" /> Generated Flashcards ({generatedFlashcards.length})
               </span>
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <CheckCircle2 className="h-3.5 w-3.5 text-success" /> Saved to Flashcards
-              </span>
+              <div className="flex items-center gap-2">
+                <Select value={flashcardSubjectId} onValueChange={setFlashcardSubjectId}>
+                  <SelectTrigger className="w-36 h-8 text-xs">
+                    <SelectValue placeholder="Subject..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  disabled={!flashcardSubjectId}
+                  onClick={handleSaveFlashcards}
+                >
+                  <Save className="h-3.5 w-3.5 mr-1" /> Save All
+                </Button>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
