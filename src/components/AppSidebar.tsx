@@ -1,6 +1,7 @@
-import { BookOpen, Timer, BarChart3, BrainCircuit, GraduationCap } from "lucide-react";
+import { BookOpen, Timer, BarChart3, BrainCircuit } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import ggLogo from "@/assets/gg-logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -22,16 +23,15 @@ const navItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
 
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
-        <div className="flex items-center gap-2 px-4 py-5">
-          <GraduationCap className="h-7 w-7 text-sidebar-primary shrink-0" />
+        <div className="flex items-center gap-2.5 px-4 py-5">
+          <img src={ggLogo} alt="Gracie's Guide" className="h-8 w-8 shrink-0 rounded-lg" />
           {!collapsed && (
             <span className="font-display text-lg font-bold text-sidebar-accent-foreground">
-              StudyBuddy
+              Gracie's Guide
             </span>
           )}
         </div>

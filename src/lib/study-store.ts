@@ -25,13 +25,13 @@ const SUBJECTS_KEY = "studybuddy_subjects";
 const SESSIONS_KEY = "studybuddy_sessions";
 
 const SUBJECT_COLORS = [
-  "hsl(172, 60%, 38%)",
-  "hsl(260, 50%, 55%)",
-  "hsl(35, 85%, 55%)",
-  "hsl(340, 65%, 55%)",
-  "hsl(200, 70%, 50%)",
-  "hsl(145, 60%, 40%)",
-  "hsl(15, 75%, 55%)",
+  "hsl(16, 85%, 62%)",
+  "hsl(270, 50%, 60%)",
+  "hsl(165, 55%, 48%)",
+  "hsl(40, 85%, 58%)",
+  "hsl(200, 65%, 55%)",
+  "hsl(330, 55%, 55%)",
+  "hsl(120, 45%, 50%)",
   "hsl(280, 55%, 50%)",
 ];
 
