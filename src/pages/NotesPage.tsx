@@ -89,7 +89,6 @@ export default function NotesPage() {
         subjectId: selectedSubject,
         title: title.trim(),
         content: content.trim(),
-        date: new Date().toISOString(),
       });
       toast.success("Note saved!");
     }
