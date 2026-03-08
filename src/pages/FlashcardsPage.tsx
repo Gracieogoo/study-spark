@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Layers,
   Plus,
@@ -20,6 +21,8 @@ import {
   XCircle,
   Brain,
   Trash2,
+  Clock,
+  Calendar,
 } from "lucide-react";
 
 type Mode = "manage" | "review";
@@ -39,7 +42,7 @@ export default function FlashcardsPage() {
 
   const filteredCards = useMemo(
     () =>
-      selectedSubject
+      selectedSubject && selectedSubject !== "all"
         ? flashcards.filter((c) => c.subject_id === selectedSubject)
         : flashcards,
     [flashcards, selectedSubject]
@@ -47,6 +50,20 @@ export default function FlashcardsPage() {
 
   const dueCards = useMemo(
     () => filteredCards.filter((c) => new Date(c.next_review) <= new Date()),
+    [filteredCards]
+  );
+
+  // Review history stats
+  const reviewedCards = useMemo(
+    () => filteredCards.filter((c) => c.review_count > 0).sort((a, b) => {
+      // Sort by next_review descending to show recently reviewed first
+      return new Date(b.next_review).getTime() - new Date(a.next_review).getTime();
+    }),
+    [filteredCards]
+  );
+
+  const totalReviews = useMemo(
+    () => filteredCards.reduce((sum, c) => sum + c.review_count, 0),
     [filteredCards]
   );
 
@@ -69,7 +86,6 @@ export default function FlashcardsPage() {
     const card = dueCards[reviewIndex];
     if (!card) return;
 
-    // SM-2 algorithm
     let { ease_factor, interval, review_count } = card;
     let ef = Number(ease_factor);
 
@@ -152,32 +168,16 @@ export default function FlashcardsPage() {
 
             {flipped && (
               <div className="flex gap-2 justify-center">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleReviewResponse(1)}
-                >
+                <Button variant="destructive" size="sm" onClick={() => handleReviewResponse(1)}>
                   <XCircle className="h-4 w-4 mr-1" /> Again
                 </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => handleReviewResponse(3)}
-                >
+                <Button variant="secondary" size="sm" onClick={() => handleReviewResponse(3)}>
                   <RotateCcw className="h-4 w-4 mr-1" /> Hard
                 </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => handleReviewResponse(4)}
-                >
+                <Button variant="default" size="sm" onClick={() => handleReviewResponse(4)}>
                   Good
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleReviewResponse(5)}
-                >
+                <Button variant="outline" size="sm" onClick={() => handleReviewResponse(5)}>
                   Easy
                 </Button>
               </div>
@@ -225,70 +225,159 @@ export default function FlashcardsPage() {
         </Button>
       </div>
 
-      {/* Add card form */}
-      {selectedSubject && selectedSubject !== "all" && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Plus className="h-4 w-4 text-primary" /> New Flashcard
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Input
-              placeholder="Front (question)"
-              value={front}
-              onChange={(e) => setFront(e.target.value)}
-            />
-            <Textarea
-              placeholder="Back (answer)"
-              value={back}
-              onChange={(e) => setBack(e.target.value)}
-              rows={3}
-            />
-            <Button size="sm" onClick={handleAdd} disabled={!front.trim() || !back.trim()}>
-              Add Card
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      <Tabs defaultValue="cards" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="cards" className="flex items-center gap-1.5">
+            <Layers className="h-3.5 w-3.5" /> Cards
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" /> Review History
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Card list */}
-      <div className="space-y-2">
-        <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-          <Layers className="h-4 w-4" />
-          {filteredCards.length} card{filteredCards.length !== 1 ? "s" : ""}
-        </h2>
-        {filteredCards.map((card) => {
-          const subj = subjects.find((s) => s.id === card.subject_id);
-          return (
-            <Card key={card.id} className="group">
-              <CardContent className="py-3 flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground">{card.front}</p>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.back}</p>
-                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
-                    {subj && (
-                      <span
-                        className="h-2 w-2 rounded-full inline-block"
-                        style={{ backgroundColor: subj.color }}
-                      />
-                    )}
-                    {subj?.name} · Next: {new Date(card.next_review).toLocaleDateString()}
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                  onClick={() => removeFlashcard(card.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
+        <TabsContent value="cards" className="space-y-4 mt-4">
+          {/* Add card form */}
+          {selectedSubject && selectedSubject !== "all" && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Plus className="h-4 w-4 text-primary" /> New Flashcard
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Input
+                  placeholder="Front (question)"
+                  value={front}
+                  onChange={(e) => setFront(e.target.value)}
+                />
+                <Textarea
+                  placeholder="Back (answer)"
+                  value={back}
+                  onChange={(e) => setBack(e.target.value)}
+                  rows={3}
+                />
+                <Button size="sm" onClick={handleAdd} disabled={!front.trim() || !back.trim()}>
+                  Add Card
                 </Button>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+          )}
+
+          {/* Card list */}
+          <div className="space-y-2">
+            <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              {filteredCards.length} card{filteredCards.length !== 1 ? "s" : ""}
+            </h2>
+            {filteredCards.map((card) => {
+              const subj = subjects.find((s) => s.id === card.subject_id);
+              return (
+                <Card key={card.id} className="group">
+                  <CardContent className="py-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground">{card.front}</p>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.back}</p>
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+                        {subj && (
+                          <span
+                            className="h-2 w-2 rounded-full inline-block"
+                            style={{ backgroundColor: subj.color }}
+                          />
+                        )}
+                        {subj?.name} · Next: {new Date(card.next_review).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                      onClick={() => removeFlashcard(card.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-4 mt-4">
+          {/* Stats summary */}
+          <div className="grid grid-cols-3 gap-3">
+            <Card>
+              <CardContent className="py-4 text-center">
+                <p className="text-2xl font-bold text-foreground">{totalReviews}</p>
+                <p className="text-xs text-muted-foreground">Total Reviews</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-4 text-center">
+                <p className="text-2xl font-bold text-foreground">{reviewedCards.length}</p>
+                <p className="text-xs text-muted-foreground">Cards Reviewed</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-4 text-center">
+                <p className="text-2xl font-bold text-primary">{dueCards.length}</p>
+                <p className="text-xs text-muted-foreground">Due Now</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Reviewed cards list */}
+          <div className="space-y-2">
+            <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Clock className="h-4 w-4" /> Recently Reviewed
+            </h2>
+            {reviewedCards.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No review history yet. Start reviewing cards!
+              </p>
+            ) : (
+              reviewedCards.map((card) => {
+                const subj = subjects.find((s) => s.id === card.subject_id);
+                const isDue = new Date(card.next_review) <= new Date();
+                return (
+                  <Card key={card.id}>
+                    <CardContent className="py-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground">{card.front}</p>
+                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                            {subj && (
+                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <span
+                                  className="h-2 w-2 rounded-full inline-block"
+                                  style={{ backgroundColor: subj.color }}
+                                />
+                                {subj.name}
+                              </span>
+                            )}
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <RotateCcw className="h-3 w-3" /> {card.review_count} reviews
+                            </span>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-3 w-3" /> Next: {new Date(card.next_review).toLocaleDateString()}
+                            </span>
+                            {isDue && (
+                              <span className="text-xs font-medium text-primary">Due now</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-xs text-muted-foreground">Ease</p>
+                          <p className="text-sm font-semibold text-foreground">{Number(card.ease_factor).toFixed(1)}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
