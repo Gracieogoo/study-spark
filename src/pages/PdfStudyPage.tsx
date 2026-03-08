@@ -31,9 +31,49 @@ export default function PdfStudyPage() {
   const [showResults, setShowResults] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [loadingQuiz, setLoadingQuiz] = useState(false);
+  const [loadingFlashcards, setLoadingFlashcards] = useState(false);
+  const [generatedFlashcards, setGeneratedFlashcards] = useState<{ front: string; back: string }[]>([]);
+  const [flashcardSubjectId, setFlashcardSubjectId] = useState("");
   const [saveSubjectId, setSaveSubjectId] = useState("");
   const { subjects } = useSubjects();
   const { addNote } = useNotes();
+  const { addFlashcard } = useFlashcards();
+
+  const handleGenerateFlashcards = async () => {
+    if (!pdfBase64) return;
+    setLoadingFlashcards(true);
+    setGeneratedFlashcards([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("pdf-process", {
+        body: { pdfBase64, action: "flashcards" },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      if (data?.flashcards && Array.isArray(data.flashcards)) {
+        setGeneratedFlashcards(data.flashcards);
+        toast.success(`Generated ${data.flashcards.length} flashcards!`);
+      } else {
+        toast.error("Unexpected response format from AI.");
+      }
+    } catch {
+      toast.error("Failed to generate flashcards. Please try again.");
+    } finally {
+      setLoadingFlashcards(false);
+    }
+  };
+
+  const handleSaveFlashcards = async () => {
+    if (!flashcardSubjectId || generatedFlashcards.length === 0) return;
+    try {
+      for (const card of generatedFlashcards) {
+        await addFlashcard(flashcardSubjectId, card.front, card.back);
+      }
+      toast.success(`Saved ${generatedFlashcards.length} flashcards!`);
+      setGeneratedFlashcards([]);
+    } catch {
+      toast.error("Failed to save flashcards.");
+    }
+  };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
