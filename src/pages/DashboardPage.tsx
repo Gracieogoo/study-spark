@@ -87,6 +87,8 @@ export default function DashboardPage() {
   }, []);
 
   const [displayName, setDisplayName] = useState<string>(user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Student");
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -94,6 +96,19 @@ export default function DashboardPage() {
       if (data?.display_name) setDisplayName(data.display_name);
     });
   }, [user]);
+
+  const handleSaveName = useCallback(async () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed || !user) return;
+    const { error } = await supabase.from("profiles").update({ display_name: trimmed }).eq("user_id", user.id);
+    if (error) {
+      toast.error("Failed to update name");
+    } else {
+      setDisplayName(trimmed);
+      toast.success("Name updated!");
+    }
+    setEditingName(false);
+  }, [nameInput, user]);
 
   const suggestions = useMemo(() => {
     const items: { label: string; description: string; icon: typeof BookOpen; path: string }[] = [];
