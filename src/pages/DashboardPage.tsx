@@ -15,7 +15,12 @@ import {
   Sparkles,
   ChevronRight,
   Flame,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
   const { user } = useAuth();
