@@ -11,6 +11,7 @@ import NotesPage from "@/pages/NotesPage";
 import PomodoroPage from "@/pages/PomodoroPage";
 import ProgressPage from "@/pages/ProgressPage";
 import QuizPage from "@/pages/QuizPage";
+import PdfStudyPage from "@/pages/PdfStudyPage";
 import AuthPage from "@/pages/AuthPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
