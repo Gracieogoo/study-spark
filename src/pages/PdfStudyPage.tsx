@@ -29,6 +29,16 @@ interface PdfHistoryItem {
   created_at: string;
 }
 
+interface QuizHistoryItem {
+  id: string;
+  source: string;
+  source_name: string;
+  questions: QuizQuestion[];
+  score: number | null;
+  total: number;
+  created_at: string;
+}
+
 export default function PdfStudyPage() {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +48,7 @@ export default function PdfStudyPage() {
   const [uploading, setUploading] = useState(false);
   const [summary, setSummary] = useState("");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [currentQuizId, setCurrentQuizId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [showResults, setShowResults] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(false);
@@ -47,6 +58,7 @@ export default function PdfStudyPage() {
   const [flashcardSubjectId, setFlashcardSubjectId] = useState("");
   const [saveSubjectId, setSaveSubjectId] = useState("");
   const [history, setHistory] = useState<PdfHistoryItem[]>([]);
+  const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const { subjects } = useSubjects();
   const { addNote } = useNotes();
@@ -55,18 +67,19 @@ export default function PdfStudyPage() {
   const fetchHistory = useCallback(async () => {
     if (!user) return;
     setLoadingHistory(true);
-    const { data } = await supabase
-      .from("pdf_history")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setHistory((data as PdfHistoryItem[]) || []);
+    const [pdfRes, quizRes] = await Promise.all([
+      supabase.from("pdf_history").select("*").order("created_at", { ascending: false }),
+      supabase.from("quiz_history").select("*").eq("source", "pdf").order("created_at", { ascending: false }),
+    ]);
+    setHistory((pdfRes.data as PdfHistoryItem[]) || []);
+    setQuizHistory((quizRes.data as unknown as QuizHistoryItem[]) || []);
     setLoadingHistory(false);
   }, [user]);
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
   const handleGenerateFlashcards = async () => {
-    if (!pdfBase64) return;
+    if (!pdfBase64 || !user) return;
     setLoadingFlashcards(true);
     setGeneratedFlashcards([]);
     try {
@@ -117,6 +130,7 @@ export default function PdfStudyPage() {
     setFileName(file.name);
     setSummary("");
     setQuestions([]);
+    setCurrentQuizId(null);
     setAnswers({});
     setShowResults(false);
     setGeneratedFlashcards([]);
@@ -131,7 +145,6 @@ export default function PdfStudyPage() {
       if (uploadError) throw uploadError;
       setStoragePath(filePath);
 
-      // Save to history
       await supabase.from("pdf_history").insert({
         user_id: user.id,
         file_name: file.name,
@@ -159,6 +172,7 @@ export default function PdfStudyPage() {
     setStoragePath(item.storage_path);
     setSummary("");
     setQuestions([]);
+    setCurrentQuizId(null);
     setAnswers({});
     setShowResults(false);
     setGeneratedFlashcards([]);
@@ -193,6 +207,7 @@ export default function PdfStudyPage() {
       setStoragePath("");
       setSummary("");
       setQuestions([]);
+      setCurrentQuizId(null);
       setAnswers({});
       setShowResults(false);
       setGeneratedFlashcards([]);
@@ -219,10 +234,11 @@ export default function PdfStudyPage() {
   };
 
   const handleQuiz = async () => {
-    if (!pdfBase64) return;
+    if (!pdfBase64 || !user) return;
     setLoadingQuiz(true);
     setAnswers({});
     setShowResults(false);
+    setCurrentQuizId(null);
     try {
       const { data, error } = await supabase.functions.invoke("pdf-process", {
         body: { pdfBase64, action: "quiz" },
@@ -231,6 +247,19 @@ export default function PdfStudyPage() {
       if (data?.error) { toast.error(data.error); return; }
       if (data?.questions && Array.isArray(data.questions)) {
         setQuestions(data.questions);
+
+        // Auto-save quiz to history
+        const { data: inserted } = await supabase.from("quiz_history").insert({
+          user_id: user.id,
+          source: "pdf",
+          source_name: fileName || "PDF",
+          questions: data.questions,
+          total: data.questions.length,
+        }).select("id").single();
+
+        if (inserted) setCurrentQuizId(inserted.id);
+        fetchHistory();
+        toast.success("Quiz generated and saved!");
       } else {
         toast.error("Unexpected response format from AI.");
       }
@@ -251,12 +280,29 @@ export default function PdfStudyPage() {
     0
   );
 
+  const handleCheckAnswers = async () => {
+    setShowResults(true);
+    // Update score in quiz history
+    if (currentQuizId && user) {
+      await supabase.from("quiz_history").update({ score }).eq("id", currentQuizId);
+      fetchHistory();
+    }
+  };
+
+  const loadQuizFromHistory = (item: QuizHistoryItem) => {
+    setQuestions(item.questions);
+    setCurrentQuizId(item.id);
+    setAnswers({});
+    setShowResults(false);
+  };
+
   const clearFile = () => {
     setFileName("");
     setPdfBase64("");
     setStoragePath("");
     setSummary("");
     setQuestions([]);
+    setCurrentQuizId(null);
     setAnswers({});
     setShowResults(false);
     setGeneratedFlashcards([]);
@@ -268,7 +314,7 @@ export default function PdfStudyPage() {
       <div>
         <h1 className="text-3xl font-display font-bold">PDF Study Tool</h1>
         <p className="text-muted-foreground mt-1">
-          Upload a PDF to get an AI-powered summary or quiz.
+          Upload a PDF to get an AI-powered summary, quiz, or flashcards.
         </p>
       </div>
 
@@ -300,11 +346,9 @@ export default function PdfStudyPage() {
                 <FileUp className="h-5 w-5 text-primary" />
                 <span className="font-medium text-sm truncate max-w-xs">{fileName}</span>
               </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={clearFile}>
-                  <Trash2 className="h-4 w-4 mr-1" /> Remove
-                </Button>
-              </div>
+              <Button size="sm" variant="outline" onClick={clearFile}>
+                <Trash2 className="h-4 w-4 mr-1" /> Remove
+              </Button>
             </div>
           )}
         </CardContent>
@@ -413,7 +457,7 @@ export default function PdfStudyPage() {
           <div className="flex items-center gap-3">
             {!showResults ? (
               <Button
-                onClick={() => setShowResults(true)}
+                onClick={handleCheckAnswers}
                 disabled={Object.keys(answers).length < questions.length}
               >
                 Check Answers
@@ -469,6 +513,38 @@ export default function PdfStudyPage() {
                 <p className="text-sm font-medium text-foreground">{card.front}</p>
                 <p className="text-xs text-muted-foreground mt-1">{card.back}</p>
               </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quiz History */}
+      {quizHistory.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BrainCircuit className="h-4 w-4 text-primary" /> Quiz History
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {quizHistory.map((item) => (
+              <button
+                key={item.id}
+                className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
+                onClick={() => loadQuizFromHistory(item)}
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground">{item.source_name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(item.created_at).toLocaleDateString()} · {item.total} questions
+                  </p>
+                </div>
+                {item.score !== null && (
+                  <span className={`text-sm font-bold shrink-0 ${item.score >= item.total * 0.7 ? "text-success" : "text-destructive"}`}>
+                    {item.score}/{item.total}
+                  </span>
+                )}
+              </button>
             ))}
           </CardContent>
         </Card>
