@@ -577,8 +577,23 @@ export default function PdfStudyPage() {
       {/* PDF History */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="h-4 w-4 text-primary" /> PDF History
+          <CardTitle className="text-base flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" /> PDF History
+            </span>
+            {history.length > 0 && (
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-destructive" onClick={async () => {
+                for (const item of history) {
+                  await supabase.storage.from("pdfs").remove([item.storage_path]);
+                  await supabase.from("pdf_history").delete().eq("id", item.id);
+                }
+                clearFile();
+                fetchHistory();
+                toast.success("All PDF history cleared.");
+              }}>
+                <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear All
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
