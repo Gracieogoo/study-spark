@@ -1,8 +1,16 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubjects, useNotes } from "@/lib/study-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileUp, Loader2, CheckCircle2, XCircle, BookOpen, BrainCircuit, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FileUp, Loader2, CheckCircle2, XCircle, BookOpen, BrainCircuit, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
