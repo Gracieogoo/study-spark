@@ -53,11 +53,15 @@ export default function FlashcardsPage() {
     [filteredCards]
   );
 
-  // Review history stats
-  const reviewedCards = useMemo(
-    () => filteredCards.filter((c) => c.review_count > 0).sort((a, b) => {
-      // Sort by next_review descending to show recently reviewed first
-      return new Date(b.next_review).getTime() - new Date(a.next_review).getTime();
+  // All cards sorted: reviewed first (by next_review desc), then unreviewed (by created_at desc)
+  const allCardsSorted = useMemo(
+    () => [...filteredCards].sort((a, b) => {
+      if (a.review_count > 0 && b.review_count === 0) return -1;
+      if (a.review_count === 0 && b.review_count > 0) return 1;
+      if (a.review_count > 0 && b.review_count > 0) {
+        return new Date(b.next_review).getTime() - new Date(a.next_review).getTime();
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     }),
     [filteredCards]
   );
