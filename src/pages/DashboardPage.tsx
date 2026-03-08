@@ -253,4 +253,4 @@ const StatCard = React.forwardRef<HTMLDivElement, {
       </CardContent>
     </Card>
   );
-}
+});
