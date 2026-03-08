@@ -30,7 +30,9 @@ export default function PdfStudyPage() {
   const [showResults, setShowResults] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [loadingQuiz, setLoadingQuiz] = useState(false);
-
+  const [saveSubjectId, setSaveSubjectId] = useState("");
+  const { subjects } = useSubjects();
+  const { addNote } = useNotes();
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
