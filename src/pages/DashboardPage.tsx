@@ -47,6 +47,32 @@ export default function DashboardPage() {
 
   const recentNotes = useMemo(() => notes.slice(0, 3), [notes]);
 
+  const studyStreak = useMemo(() => {
+    if (sessions.length === 0) return 0;
+    const uniqueDays = new Set(sessions.map((s) => s.date.slice(0, 10)));
+    const sortedDays = Array.from(uniqueDays).sort().reverse();
+    
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+    const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().slice(0, 10);
+    
+    // Streak must include today or yesterday
+    if (!uniqueDays.has(todayStr) && !uniqueDays.has(yesterdayStr)) return 0;
+    
+    let streak = 0;
+    const startDate = uniqueDays.has(todayStr) ? today : new Date(today.getTime() - 86400000);
+    
+    for (let i = 0; i < 365; i++) {
+      const checkDate = new Date(startDate.getTime() - i * 86400000).toISOString().slice(0, 10);
+      if (uniqueDays.has(checkDate)) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }, [sessions]);
+
   const greeting = useMemo(() => {
     const h = new Date().getHours();
     if (h < 12) return "Good morning";
