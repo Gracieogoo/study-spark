@@ -509,29 +509,46 @@ export default function PdfStudyPage() {
       {quizHistory.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <BrainCircuit className="h-4 w-4 text-primary" /> Quiz History
+            <CardTitle className="text-base flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <BrainCircuit className="h-4 w-4 text-primary" /> Quiz History
+              </span>
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-destructive" onClick={deleteAllQuizHistory}>
+                <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear All
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {quizHistory.map((item) => (
-              <button
+              <div
                 key={item.id}
-                className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
-                onClick={() => loadQuizFromHistory(item)}
+                className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
               >
-                <div className="min-w-0">
+                <button
+                  className="flex-1 text-left min-w-0"
+                  onClick={() => loadQuizFromHistory(item)}
+                >
                   <p className="text-sm font-medium text-foreground">{item.source_name}</p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(item.created_at).toLocaleDateString()} · {item.total} questions
                   </p>
+                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {item.score !== null && (
+                    <span className={`text-sm font-bold ${item.score >= item.total * 0.7 ? "text-success" : "text-destructive"}`}>
+                      {item.score}/{item.total}
+                    </span>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    onClick={() => deleteQuizHistoryItem(item.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-                {item.score !== null && (
-                  <span className={`text-sm font-bold shrink-0 ${item.score >= item.total * 0.7 ? "text-success" : "text-destructive"}`}>
-                    {item.score}/{item.total}
-                  </span>
-                )}
-              </button>
+              </div>
             ))}
           </CardContent>
         </Card>
