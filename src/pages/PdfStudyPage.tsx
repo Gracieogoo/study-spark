@@ -174,13 +174,19 @@ export default function PdfStudyPage() {
     0
   );
 
-  const clearFile = () => {
+  const clearFile = async () => {
+    // Delete from storage if uploaded
+    if (storagePath) {
+      await supabase.storage.from("pdfs").remove([storagePath]);
+    }
     setFileName("");
     setPdfBase64("");
+    setStoragePath("");
     setSummary("");
     setQuestions([]);
     setAnswers({});
     setShowResults(false);
+    setGeneratedFlashcards([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
