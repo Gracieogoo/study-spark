@@ -232,17 +232,12 @@ export default function DashboardPage() {
   );
 }
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  highlight,
-}: {
+const StatCard = React.forwardRef<HTMLDivElement, {
   icon: typeof Clock;
   label: string;
   value: string;
   highlight?: boolean;
-}) {
+}>(function StatCard({ icon: Icon, label, value, highlight }, ref) {
   return (
     <Card className={`relative overflow-hidden ${highlight ? "border-primary/50 bg-primary/5" : ""}`}>
       <CardContent className="p-4">
