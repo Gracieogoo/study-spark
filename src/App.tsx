@@ -13,6 +13,7 @@ import ProgressPage from "@/pages/ProgressPage";
 import QuizPage from "@/pages/QuizPage";
 import PdfStudyPage from "@/pages/PdfStudyPage";
 import FlashcardsPage from "@/pages/FlashcardsPage";
+import BreakGamePage from "@/pages/BreakGamePage";
 import AuthPage from "@/pages/AuthPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
@@ -43,6 +44,7 @@ function ProtectedRoutes() {
         <Route path="/quiz" element={<QuizPage />} />
         <Route path="/pdf-study" element={<PdfStudyPage />} />
         <Route path="/flashcards" element={<FlashcardsPage />} />
+        <Route path="/break" element={<BreakGamePage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
