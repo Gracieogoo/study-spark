@@ -43,7 +43,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent className="flex flex-col h-full">
-        <div className="flex items-center gap-2.5 px-4 py-5 overflow-hidden">
+        <div className={`flex items-center gap-2.5 py-5 overflow-hidden ${collapsed ? "justify-center px-0" : "px-4"}`}>
           <img src={neuralLogo} alt="Neural Guide" className="h-10 w-10 min-w-[2.5rem] shrink-0" />
           {!collapsed && (
             <span className="font-display text-xl font-bold text-gradient-brand whitespace-nowrap">

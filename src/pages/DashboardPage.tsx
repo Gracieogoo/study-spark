@@ -179,7 +179,7 @@ export default function DashboardPage() {
               <Pencil className="h-4 w-4 opacity-0 group-hover:opacity-60 transition-opacity" />
             </span>
           )}
-          <Sparkles className="h-6 w-6 text-primary/70" />
+          
         </h1>
         <p className="text-muted-foreground">Here's your study overview for today.</p>
       </div>
