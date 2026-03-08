@@ -15,6 +15,7 @@ export default function AuthPage() {
   const [view, setView] = useState<AuthView>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
