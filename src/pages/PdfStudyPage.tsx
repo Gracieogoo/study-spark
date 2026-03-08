@@ -80,10 +80,6 @@ export default function PdfStudyPage() {
 
   const handleGenerateFlashcards = async () => {
     if (!pdfBase64 || !user) return;
-    if (!flashcardSubjectId) {
-      toast.error("Please select a subject first to save flashcards.");
-      return;
-    }
     setLoadingFlashcards(true);
     setGeneratedFlashcards([]);
     try {
@@ -94,11 +90,7 @@ export default function PdfStudyPage() {
       if (data?.error) { toast.error(data.error); return; }
       if (data?.flashcards && Array.isArray(data.flashcards)) {
         setGeneratedFlashcards(data.flashcards);
-        // Auto-save all flashcards to the database
-        for (const card of data.flashcards) {
-          await addFlashcard(flashcardSubjectId, card.front, card.back);
-        }
-        toast.success(`Generated and saved ${data.flashcards.length} flashcards!`);
+        toast.success(`Generated ${data.flashcards.length} flashcards! Select a subject to save them.`);
       } else {
         toast.error("Unexpected response format from AI.");
       }
@@ -110,12 +102,12 @@ export default function PdfStudyPage() {
   };
 
   const handleSaveFlashcards = async () => {
-    if (!flashcardSubjectId || generatedFlashcards.length === 0) return;
+    if (!flashcardSubjectId || generatedFlashcards.length === 0 || !user) return;
     try {
       for (const card of generatedFlashcards) {
         await addFlashcard(flashcardSubjectId, card.front, card.back);
       }
-      toast.success(`Saved ${generatedFlashcards.length} flashcards!`);
+      toast.success(`Saved ${generatedFlashcards.length} flashcards to your collection!`);
       setGeneratedFlashcards([]);
     } catch {
       toast.error("Failed to save flashcards.");
