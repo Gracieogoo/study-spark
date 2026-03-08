@@ -13,13 +13,13 @@ export default function ProgressPage() {
   // Per-subject data
   const subjectMap = new Map<string, { name: string; minutes: number; color: string }>();
   sessions.forEach((s) => {
-    const existing = subjectMap.get(s.subjectId);
-    const sub = subjects.find((x) => x.id === s.subjectId);
+    const existing = subjectMap.get(s.subject_id);
+    const sub = subjects.find((x) => x.id === s.subject_id);
     const color = sub?.color || "hsl(var(--primary))";
     if (existing) {
       existing.minutes += s.duration;
     } else {
-      subjectMap.set(s.subjectId, { name: s.subjectName, minutes: s.duration, color });
+      subjectMap.set(s.subject_id, { name: s.subject_name, minutes: s.duration, color });
     }
   });
   const subjectData = Array.from(subjectMap.values());

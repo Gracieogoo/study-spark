@@ -89,7 +89,6 @@ export default function NotesPage() {
         subjectId: selectedSubject,
         title: title.trim(),
         content: content.trim(),
-        date: new Date().toISOString(),
       });
       toast.success("Note saved!");
     }
@@ -99,13 +98,13 @@ export default function NotesPage() {
 
   const handleEdit = (note: typeof notes[0]) => {
     setEditingId(note.id);
-    setSelectedSubject(note.subjectId);
+    setSelectedSubject(note.subject_id);
     setTitle(note.title);
     setContent(note.content);
   };
 
   const filteredNotes = selectedSubject
-    ? notes.filter((n) => n.subjectId === selectedSubject)
+    ? notes.filter((n) => n.subject_id === selectedSubject)
     : notes;
 
   const getSubjectName = (id: string) => subjects.find((s) => s.id === id)?.name || "Unknown";
@@ -213,14 +212,14 @@ export default function NotesPage() {
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {filteredNotes
-              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
               .map((note) => (
                 <Card key={note.id} className="group cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleEdit(note)}>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getSubjectColor(note.subjectId) }} />
-                        <span className="text-xs text-muted-foreground">{getSubjectName(note.subjectId)}</span>
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getSubjectColor(note.subject_id) }} />
+                        <span className="text-xs text-muted-foreground">{getSubjectName(note.subject_id)}</span>
                       </div>
                       <Button
                         variant="ghost"
@@ -236,7 +235,7 @@ export default function NotesPage() {
                   <CardContent>
                     <p className="text-xs text-muted-foreground line-clamp-3">{note.content}</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {new Date(note.date).toLocaleDateString("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      {new Date(note.created_at).toLocaleDateString("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </CardContent>
                 </Card>
