@@ -1,4 +1,4 @@
-import { LayoutDashboard, BookOpen, Timer, BarChart3, BrainCircuit, FileText, FileUp, Moon, Sun, LogOut } from "lucide-react";
+import { LayoutDashboard, BookOpen, Timer, BarChart3, BrainCircuit, FileText, FileUp, Layers, Moon, Sun, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/lib/auth-context";
 import neuralLogo from "@/assets/neural-logo.png";
@@ -23,6 +23,7 @@ const navItems = [
   { title: "Progress", url: "/progress", icon: BarChart3 },
   { title: "AI Quiz", url: "/quiz", icon: BrainCircuit },
   { title: "PDF Study", url: "/pdf-study", icon: FileUp },
+  { title: "Flashcards", url: "/flashcards", icon: Layers },
 ];
 
 export function AppSidebar() {

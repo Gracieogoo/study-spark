@@ -1,8 +1,16 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubjects, useNotes } from "@/lib/study-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileUp, Loader2, CheckCircle2, XCircle, BookOpen, BrainCircuit, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FileUp, Loader2, CheckCircle2, XCircle, BookOpen, BrainCircuit, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
@@ -22,7 +30,9 @@ export default function PdfStudyPage() {
   const [showResults, setShowResults] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [loadingQuiz, setLoadingQuiz] = useState(false);
-
+  const [saveSubjectId, setSaveSubjectId] = useState("");
+  const { subjects } = useSubjects();
+  const { addNote } = useNotes();
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -170,8 +180,33 @@ export default function PdfStudyPage() {
       {summary && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-display flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" /> Summary
+            <CardTitle className="text-lg font-display flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" /> Summary
+              </span>
+              <div className="flex items-center gap-2">
+                <Select value={saveSubjectId} onValueChange={setSaveSubjectId}>
+                  <SelectTrigger className="w-36 h-8 text-xs">
+                    <SelectValue placeholder="Subject..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={!saveSubjectId}
+                  onClick={async () => {
+                    await addNote({ subjectId: saveSubjectId, title: `Summary: ${fileName}`, content: summary });
+                    toast.success("Summary saved as note!");
+                  }}
+                >
+                  <Save className="h-3.5 w-3.5 mr-1" /> Save as Note
+                </Button>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert max-w-none">
