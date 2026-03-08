@@ -358,21 +358,33 @@ export default function FlashcardsPage() {
                                 {subj.name}
                               </span>
                             )}
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <RotateCcw className="h-3 w-3" /> {card.review_count} reviews
-                            </span>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Calendar className="h-3 w-3" /> Next: {new Date(card.next_review).toLocaleDateString()}
-                            </span>
+                            {card.review_count > 0 ? (
+                              <>
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <RotateCcw className="h-3 w-3" /> {card.review_count} reviews
+                                </span>
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" /> Next: {new Date(card.next_review).toLocaleDateString()}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                Added {new Date(card.created_at).toLocaleDateString()}
+                              </span>
+                            )}
                             {isDue && (
                               <span className="text-xs font-medium text-primary">Due now</span>
                             )}
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-xs text-muted-foreground">Ease</p>
-                          <p className="text-sm font-semibold text-foreground">{Number(card.ease_factor).toFixed(1)}</p>
-                        </div>
+                        {card.review_count > 0 ? (
+                          <div className="text-right shrink-0">
+                            <p className="text-xs text-muted-foreground">Ease</p>
+                            <p className="text-sm font-semibold text-foreground">{Number(card.ease_factor).toFixed(1)}</p>
+                          </div>
+                        ) : (
+                          <span className="text-xs font-medium text-accent-foreground bg-accent px-2 py-0.5 rounded shrink-0">New</span>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
