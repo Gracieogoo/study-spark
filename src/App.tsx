@@ -42,6 +42,7 @@ function ProtectedRoutes() {
         <Route path="/progress" element={<ProgressPage />} />
         <Route path="/quiz" element={<QuizPage />} />
         <Route path="/pdf-study" element={<PdfStudyPage />} />
+        <Route path="/flashcards" element={<FlashcardsPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
