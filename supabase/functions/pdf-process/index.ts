@@ -61,10 +61,9 @@ Make flashcards that test understanding — use clear, concise language on both 
               role: "user",
               content: [
                 {
-                  type: "file",
-                  file: {
-                    filename: "document.pdf",
-                    data: pdfBase64,
+                  type: "image_url",
+                  image_url: {
+                    url: `data:application/pdf;base64,${pdfBase64}`,
                   },
                 },
                 {
