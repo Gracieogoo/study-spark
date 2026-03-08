@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback } from "react";
 import { useSubjects, useSessions, useNotes } from "@/lib/study-store";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -232,17 +232,12 @@ export default function DashboardPage() {
   );
 }
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  highlight,
-}: {
+const StatCard = React.forwardRef<HTMLDivElement, {
   icon: typeof Clock;
   label: string;
   value: string;
   highlight?: boolean;
-}) {
+}>(function StatCard({ icon: Icon, label, value, highlight }, ref) {
   return (
     <Card className={`relative overflow-hidden ${highlight ? "border-primary/50 bg-primary/5" : ""}`}>
       <CardContent className="p-4">
@@ -258,4 +253,4 @@ function StatCard({
       </CardContent>
     </Card>
   );
-}
+});
