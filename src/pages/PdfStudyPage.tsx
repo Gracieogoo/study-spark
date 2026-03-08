@@ -22,9 +22,12 @@ interface QuizQuestion {
 }
 
 export default function PdfStudyPage() {
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState("");
   const [pdfBase64, setPdfBase64] = useState("");
+  const [storagePath, setStoragePath] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [summary, setSummary] = useState("");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<number, number>>({});
