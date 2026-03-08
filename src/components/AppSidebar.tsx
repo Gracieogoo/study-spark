@@ -1,4 +1,4 @@
-import { LayoutDashboard, BookOpen, Timer, BarChart3, BrainCircuit, FileText, FileUp, Moon, Sun, LogOut } from "lucide-react";
+import { LayoutDashboard, BookOpen, Timer, BarChart3, BrainCircuit, FileText, FileUp, Layers, Moon, Sun, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/lib/auth-context";
 import neuralLogo from "@/assets/neural-logo.png";
