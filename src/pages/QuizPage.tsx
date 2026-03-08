@@ -235,7 +235,7 @@ export default function QuizPage() {
             <SelectContent>
               {notes.map((n) => (
                 <SelectItem key={n.id} value={n.id}>
-                  {n.title} — {getSubjectName(n.subjectId)}
+                  {n.title} — {getSubjectName(n.subject_id)}
                 </SelectItem>
               ))}
             </SelectContent>
