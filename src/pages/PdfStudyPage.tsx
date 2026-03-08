@@ -77,9 +77,9 @@ export default function PdfStudyPage() {
       toast.error("Failed to save flashcards.");
     }
   };
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !user) return;
 
     if (file.type !== "application/pdf") {
       toast.error("Please upload a PDF file.");
@@ -95,13 +95,33 @@ export default function PdfStudyPage() {
     setQuestions([]);
     setAnswers({});
     setShowResults(false);
+    setGeneratedFlashcards([]);
+    setUploading(true);
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = (reader.result as string).split(",")[1];
-      setPdfBase64(base64);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Upload to storage
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("pdfs")
+        .upload(filePath, file, { contentType: "application/pdf" });
+
+      if (uploadError) throw uploadError;
+      setStoragePath(filePath);
+
+      // Also read base64 for AI processing
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(",")[1];
+        setPdfBase64(base64);
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+      toast.success("PDF uploaded to storage!");
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      toast.error("Failed to upload PDF. Please try again.");
+      setUploading(false);
+    }
   };
 
   const handleSummarize = async () => {
