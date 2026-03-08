@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubjects, useNotes } from "@/lib/study-store";
 import { useFlashcards } from "@/lib/flashcard-store";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
