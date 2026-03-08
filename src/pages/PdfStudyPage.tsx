@@ -102,16 +102,36 @@ export default function PdfStudyPage() {
   };
 
   const handleSaveFlashcards = async () => {
-    if (!flashcardSubjectId || generatedFlashcards.length === 0 || !user) return;
+    if (generatedFlashcards.length === 0 || !user) return;
+    if (subjects.length === 0) {
+      toast.error("Please create a subject first in the Subjects page.");
+      return;
+    }
+    // Use first subject as default if none selected
+    const subjectId = flashcardSubjectId || subjects[0]?.id;
+    if (!subjectId) return;
     try {
       for (const card of generatedFlashcards) {
-        await addFlashcard(flashcardSubjectId, card.front, card.back);
+        await addFlashcard(subjectId, card.front, card.back);
       }
       toast.success(`Saved ${generatedFlashcards.length} flashcards to your collection!`);
       setGeneratedFlashcards([]);
     } catch {
       toast.error("Failed to save flashcards.");
     }
+  };
+
+  const deleteQuizHistoryItem = async (id: string) => {
+    await supabase.from("quiz_history").delete().eq("id", id);
+    fetchHistory();
+    toast.success("Quiz removed.");
+  };
+
+  const deleteAllQuizHistory = async () => {
+    if (!user) return;
+    await supabase.from("quiz_history").delete().eq("source", "pdf").eq("user_id", user.id);
+    fetchHistory();
+    toast.success("All quiz history cleared.");
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
