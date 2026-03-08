@@ -139,7 +139,8 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <StatCard icon={Flame} label="Study streak" value={`${studyStreak} day${studyStreak !== 1 ? "s" : ""}`} highlight={studyStreak >= 3} />
         <StatCard icon={Clock} label="Study today" value={`${todayMinutes} min`} />
         <StatCard icon={Timer} label="Sessions today" value={String(todaySessions.length)} />
         <StatCard icon={BookOpen} label="Subjects" value={String(subjects.length)} />
