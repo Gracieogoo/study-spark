@@ -180,8 +180,33 @@ export default function PdfStudyPage() {
       {summary && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-display flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" /> Summary
+            <CardTitle className="text-lg font-display flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" /> Summary
+              </span>
+              <div className="flex items-center gap-2">
+                <Select value={saveSubjectId} onValueChange={setSaveSubjectId}>
+                  <SelectTrigger className="w-36 h-8 text-xs">
+                    <SelectValue placeholder="Subject..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={!saveSubjectId}
+                  onClick={async () => {
+                    await addNote({ subjectId: saveSubjectId, title: `Summary: ${fileName}`, content: summary });
+                    toast.success("Summary saved as note!");
+                  }}
+                >
+                  <Save className="h-3.5 w-3.5 mr-1" /> Save as Note
+                </Button>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert max-w-none">
