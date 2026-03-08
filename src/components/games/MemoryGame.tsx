@@ -109,6 +109,13 @@ export default function MemoryGame() {
 
   return (
     <div className="space-y-4">
+      <Card className="bg-muted/30 border-border/50">
+        <CardContent className="p-4 space-y-1 text-sm text-muted-foreground">
+          <p className="font-semibold text-foreground text-base">How to play</p>
+          <p>Flip two cards at a time to find matching pairs. Match all 8 pairs to win. Try to do it in as few moves as possible!</p>
+        </CardContent>
+      </Card>
+
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Timer className="h-4 w-4" /> {elapsed}s
