@@ -95,7 +95,7 @@ export default function ProgressPage() {
                 <XAxis dataKey="day" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} unit="m" />
                 <Tooltip formatter={(v: number) => [`${v} min`, "Study time"]} />
-                <Bar dataKey="minutes" fill="hsl(172, 60%, 38%)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="minutes" fill="hsl(16, 85%, 62%)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
