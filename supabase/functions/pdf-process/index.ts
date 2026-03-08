@@ -17,8 +17,8 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     if (!pdfBase64) throw new Error("No PDF data provided");
-    if (!action || !["summarize", "quiz"].includes(action)) {
-      throw new Error("Invalid action. Must be 'summarize' or 'quiz'");
+    if (!action || !["summarize", "quiz", "flashcards"].includes(action)) {
+      throw new Error("Invalid action. Must be 'summarize', 'quiz', or 'flashcards'");
     }
 
     const systemPrompt =
