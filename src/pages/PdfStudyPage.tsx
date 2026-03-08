@@ -102,16 +102,36 @@ export default function PdfStudyPage() {
   };
 
   const handleSaveFlashcards = async () => {
-    if (!flashcardSubjectId || generatedFlashcards.length === 0 || !user) return;
+    if (generatedFlashcards.length === 0 || !user) return;
+    if (subjects.length === 0) {
+      toast.error("Please create a subject first in the Subjects page.");
+      return;
+    }
+    // Use first subject as default if none selected
+    const subjectId = flashcardSubjectId || subjects[0]?.id;
+    if (!subjectId) return;
     try {
       for (const card of generatedFlashcards) {
-        await addFlashcard(flashcardSubjectId, card.front, card.back);
+        await addFlashcard(subjectId, card.front, card.back);
       }
       toast.success(`Saved ${generatedFlashcards.length} flashcards to your collection!`);
       setGeneratedFlashcards([]);
     } catch {
       toast.error("Failed to save flashcards.");
     }
+  };
+
+  const deleteQuizHistoryItem = async (id: string) => {
+    await supabase.from("quiz_history").delete().eq("id", id);
+    fetchHistory();
+    toast.success("Quiz removed.");
+  };
+
+  const deleteAllQuizHistory = async () => {
+    if (!user) return;
+    await supabase.from("quiz_history").delete().eq("source", "pdf").eq("user_id", user.id);
+    fetchHistory();
+    toast.success("All quiz history cleared.");
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -486,25 +506,12 @@ export default function PdfStudyPage() {
               <span className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-primary" /> Generated Flashcards ({generatedFlashcards.length})
               </span>
-              <div className="flex items-center gap-2">
-                <Select value={flashcardSubjectId} onValueChange={setFlashcardSubjectId}>
-                  <SelectTrigger className="w-36 h-8 text-xs">
-                    <SelectValue placeholder="Subject..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  size="sm"
-                  disabled={!flashcardSubjectId}
-                  onClick={handleSaveFlashcards}
-                >
-                  <Save className="h-3.5 w-3.5 mr-1" /> Save All
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                onClick={handleSaveFlashcards}
+              >
+                <Save className="h-3.5 w-3.5 mr-1" /> Save All
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -522,29 +529,46 @@ export default function PdfStudyPage() {
       {quizHistory.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <BrainCircuit className="h-4 w-4 text-primary" /> Quiz History
+            <CardTitle className="text-base flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <BrainCircuit className="h-4 w-4 text-primary" /> Quiz History
+              </span>
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-destructive" onClick={deleteAllQuizHistory}>
+                <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear All
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {quizHistory.map((item) => (
-              <button
+              <div
                 key={item.id}
-                className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
-                onClick={() => loadQuizFromHistory(item)}
+                className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
               >
-                <div className="min-w-0">
+                <button
+                  className="flex-1 text-left min-w-0"
+                  onClick={() => loadQuizFromHistory(item)}
+                >
                   <p className="text-sm font-medium text-foreground">{item.source_name}</p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(item.created_at).toLocaleDateString()} · {item.total} questions
                   </p>
+                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {item.score !== null && (
+                    <span className={`text-sm font-bold ${item.score >= item.total * 0.7 ? "text-success" : "text-destructive"}`}>
+                      {item.score}/{item.total}
+                    </span>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    onClick={() => deleteQuizHistoryItem(item.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-                {item.score !== null && (
-                  <span className={`text-sm font-bold shrink-0 ${item.score >= item.total * 0.7 ? "text-success" : "text-destructive"}`}>
-                    {item.score}/{item.total}
-                  </span>
-                )}
-              </button>
+              </div>
             ))}
           </CardContent>
         </Card>
@@ -553,8 +577,23 @@ export default function PdfStudyPage() {
       {/* PDF History */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="h-4 w-4 text-primary" /> PDF History
+          <CardTitle className="text-base flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" /> PDF History
+            </span>
+            {history.length > 0 && (
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-destructive" onClick={async () => {
+                for (const item of history) {
+                  await supabase.storage.from("pdfs").remove([item.storage_path]);
+                  await supabase.from("pdf_history").delete().eq("id", item.id);
+                }
+                clearFile();
+                fetchHistory();
+                toast.success("All PDF history cleared.");
+              }}>
+                <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear All
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
