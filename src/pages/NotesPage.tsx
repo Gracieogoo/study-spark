@@ -98,13 +98,13 @@ export default function NotesPage() {
 
   const handleEdit = (note: typeof notes[0]) => {
     setEditingId(note.id);
-    setSelectedSubject(note.subjectId);
+    setSelectedSubject(note.subject_id);
     setTitle(note.title);
     setContent(note.content);
   };
 
   const filteredNotes = selectedSubject
-    ? notes.filter((n) => n.subjectId === selectedSubject)
+    ? notes.filter((n) => n.subject_id === selectedSubject)
     : notes;
 
   const getSubjectName = (id: string) => subjects.find((s) => s.id === id)?.name || "Unknown";
