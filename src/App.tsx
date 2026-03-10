@@ -16,6 +16,7 @@ import FlashcardsPage from "@/pages/FlashcardsPage";
 import BreakGamePage from "@/pages/BreakGamePage";
 import AuthPage from "@/pages/AuthPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import InstallPage from "@/pages/InstallPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
