@@ -16,6 +16,7 @@ import FlashcardsPage from "@/pages/FlashcardsPage";
 import BreakGamePage from "@/pages/BreakGamePage";
 import AuthPage from "@/pages/AuthPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import InstallPage from "@/pages/InstallPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<AuthRouteGuard />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/install" element={<InstallPage />} />
             <Route path="/*" element={<ProtectedRoutes />} />
           </Routes>
         </BrowserRouter>
