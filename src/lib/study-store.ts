@@ -26,8 +26,13 @@ export function useSubjects() {
 
   const fetchSubjects = useCallback(async () => {
     if (!user) { setSubjects([]); setLoading(false); return; }
-    const { data: subjectsData } = await supabase.from("subjects").select("*").order("created_at");
-    const { data: topicsData } = await supabase.from("topics").select("*").order("created_at");
+    
+    const { data: subjectsData, error: subjectsError } = await supabase.from("subjects").select("*").order("created_at");
+    if (subjectsError) console.error("Error fetching subjects:", subjectsError);
+    
+    const { data: topicsData, error: topicsError } = await supabase.from("topics").select("*").order("created_at");
+    if (topicsError) console.error("Error fetching topics:", topicsError);
+
     const subs: Subject[] = (subjectsData || []).map((s) => ({
       ...s,
       topics: (topicsData || []).filter((t) => t.subject_id === s.id),
