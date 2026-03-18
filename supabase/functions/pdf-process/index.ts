@@ -13,8 +13,8 @@ serve(async (req) => {
 
   try {
     const { pdfBase64, action } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
 
     if (!pdfBase64) throw new Error("No PDF data provided");
     if (!action || !["summarize", "quiz", "flashcards"].includes(action)) {
@@ -45,39 +45,40 @@ Return ONLY valid JSON in this exact format, no other text:
 Make flashcards that test understanding — use clear, concise language on both sides.`;
     }
 
+    const textPrompt = 
+      action === "summarize"
+        ? "Please summarize this PDF document."
+        : action === "quiz"
+        ? "Please generate a quiz from this PDF document."
+        : "Please generate flashcards from this PDF document.";
+
     const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: systemPrompt },
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          },
+          contents: [
             {
               role: "user",
-              content: [
+              parts: [
                 {
-                  type: "image_url",
-                  image_url: {
-                    url: `data:application/pdf;base64,${pdfBase64}`,
-                  },
+                  inlineData: {
+                    mimeType: "application/pdf",
+                    data: pdfBase64
+                  }
                 },
                 {
-                  type: "text",
-                  text:
-                    action === "summarize"
-                      ? "Please summarize this PDF document."
-                      : action === "quiz"
-                      ? "Please generate a quiz from this PDF document."
-                      : "Please generate flashcards from this PDF document.",
-                },
-              ],
-            },
-          ],
+                  text: textPrompt
+                }
+              ]
+            }
+          ]
         }),
       }
     );
@@ -89,22 +90,16 @@ Make flashcards that test understanding — use clear, concise language on both 
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
       const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
+      console.error("Gemini API error:", response.status, t);
       return new Response(
-        JSON.stringify({ error: "AI service error" }),
+        JSON.stringify({ error: `AI service error: ${response.status} ${t}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     if (action === "summarize") {
       return new Response(JSON.stringify({ summary: content }), {
